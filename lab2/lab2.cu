@@ -1,4 +1,3 @@
-%%writefile image.cu
 #include <iostream>
 #include <string>
 #include <stdio.h>
