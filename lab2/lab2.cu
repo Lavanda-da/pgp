@@ -22,23 +22,21 @@ __global__ void kernel(cudaTextureObject_t tex, uchar4 *out, int w, int h, int d
     int offsety = blockDim.y * gridDim.y;
     int x, y, x_frame, y_frame;
     uchar4 p;
-    int r, g, b, a;
+    int r, g, b;
     for(y = idy; y < h; y += offsety) {
         for(x = idx; x < w; x += offsetx) {
             r = 0;
             g = 0;
             b = 0;
-            a = 0;
             for (y_frame = 0; y_frame < delta_h; ++y_frame) {
                 for (x_frame = 0; x_frame < delta_w; ++x_frame) {
-                    p = tex2D< uchar4 >(tex, (x * delta_w + x_frame) / w, (y * delta_h + y_frame) / h);
+                    p = tex2D< uchar4 >(tex, x * delta_w + x_frame, y * delta_h + y_frame);
                     r += p.x;
                     g += p.y;
                     b += p.z;
-                    a += p.w;
                 }
             }
-            out[y * w + x] = make_uchar4((int) (r / (delta_h * delta_w)), (int) (g / (delta_h * delta_w)), (int) (b / (delta_h * delta_w)), (int) (a / (delta_h * delta_w)));
+            out[y * w + x] = make_uchar4(r / (delta_h * delta_w), g / (delta_h * delta_w), b / (delta_h * delta_w), 0);
         }
     }
 }
@@ -74,7 +72,7 @@ int main() {
     texDesc.addressMode[1] = cudaAddressModeMirror; // Clamp
     texDesc.filterMode = cudaFilterModePoint;
     texDesc.readMode = cudaReadModeElementType;
-    texDesc.normalizedCoords = true;
+    texDesc.normalizedCoords = false;
 
     cudaTextureObject_t tex = 0;
     CSC(cudaCreateTextureObject(&tex, &resDesc, &texDesc, NULL));
