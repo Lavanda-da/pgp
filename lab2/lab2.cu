@@ -15,28 +15,32 @@ do {											                    \
 	}										                        \
 } while(0)
 
-__global__ void kernel(cudaTextureObject_t tex, uchar4 *out, int w, int h, int delta_w, int delta_h) {
+__global__ void kernel(cudaTextureObject_t tex, uchar4 *out, int w, int h, int new_w, int new_h) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int idy = blockDim.y * blockIdx.y + threadIdx.y;
-   	int offsetx = blockDim.x * gridDim.x;
+    int offsetx = blockDim.x * gridDim.x;
     int offsety = blockDim.y * gridDim.y;
-    int x, y, x_frame, y_frame;
-    uchar4 p;
+    int x, y;
+    int delta_w = w / new_w;
+    int delta_h = h / new_h;
+    int frame_x, frame_y;
     int r, g, b;
-    for(y = idy; y < h; y += offsety) {
+    uchar4 p;
+    for(y = idy ; y < h; y += offsety) {
         for(x = idx; x < w; x += offsetx) {
-            r = 0;
-            g = 0;
-            b = 0;
-            for (y_frame = 0; y_frame < delta_h; ++y_frame) {
-                for (x_frame = 0; x_frame < delta_w; ++x_frame) {
-                    p = tex2D< uchar4 >(tex, (x * delta_w + x_frame) / (w * delta_w), (y * delta_h + y_frame) / (h * delta_h));
+            r = 0, g = 0, b = 0;
+            for(frame_x = 0; frame_x < delta_w; ++frame_x) {
+                for(frame_y = 0; frame_y < delta_h; ++frame_y) {
+                    p = tex2D<uchar4>(tex, x * delta_w + frame_x, y * delta_h + frame_y);
                     r += p.x;
                     g += p.y;
                     b += p.z;
                 }
             }
-            out[y * w + x] = make_uchar4(r / (delta_h * delta_w), g / (delta_h * delta_w), b / (delta_h * delta_w), 0);
+            r /= (delta_w * delta_h);
+            g /= (delta_w * delta_h);
+            b /= (delta_w * delta_h);
+            out[y * new_w + x] = make_uchar4(r, g, b, 0);
         }
     }
 }
@@ -54,8 +58,6 @@ int main() {
     fread(data, sizeof(uchar4), w * h, fp);
     fclose(fp);
 
-    int delta_w = w / new_w, delta_h = h / new_h;
-
     cudaArray *arr;
     cudaChannelFormatDesc ch = cudaCreateChannelDesc<uchar4>();
     CSC(cudaMallocArray(&arr, &ch, w, h));
@@ -68,11 +70,11 @@ int main() {
 
     struct cudaTextureDesc texDesc;
     memset(&texDesc, 0, sizeof(texDesc));
-    texDesc.addressMode[0] = cudaAddressModeWrap;
-    texDesc.addressMode[1] = cudaAddressModeMirror; // Clamp
+    texDesc.addressMode[0] = cudaAddressModeClamp;
+    texDesc.addressMode[1] = cudaAddressModeClamp; // Clamp
     texDesc.filterMode = cudaFilterModePoint;
     texDesc.readMode = cudaReadModeElementType;
-    texDesc.normalizedCoords = true;
+    texDesc.normalizedCoords = false;
 
     cudaTextureObject_t tex = 0;
     CSC(cudaCreateTextureObject(&tex, &resDesc, &texDesc, NULL));
@@ -80,9 +82,11 @@ int main() {
     uchar4 *dev_out;
 	  CSC(cudaMalloc(&dev_out, sizeof(uchar4) * new_w * new_h));
 
-    kernel<<< dim3(16, 16), dim3(32, 32) >>>(tex, dev_out, new_w, new_h, delta_w, delta_h);
+    kernel<<< dim3(16, 16), dim3(32, 32) >>>(tex, dev_out, w, h, new_w, new_h);
+    CSC(cudaDeviceSynchronize());
     CSC(cudaGetLastError());
 
+    uchar4 *data2 = (uchar4 *)malloc(sizeof(uchar4) * new_w * new_h);
     CSC(cudaMemcpy(data, dev_out, sizeof(uchar4) * new_w * new_h, cudaMemcpyDeviceToHost));
 
 	  CSC(cudaDestroyTextureObject(tex));
