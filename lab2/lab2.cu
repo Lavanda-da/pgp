@@ -24,7 +24,7 @@ __global__ void kernel(cudaTextureObject_t tex, uchar4 *out, int w, int h, int n
     int delta_w = w / new_w;
     int delta_h = h / new_h;
     int frame_x, frame_y;
-    int r, g, b;
+    double r, g, b;
     uchar4 p;
     for(y = idy * delta_h; y < h; y += offsety) {
         for(x = idx * delta_w; x < w; x += offsetx) {
@@ -32,9 +32,9 @@ __global__ void kernel(cudaTextureObject_t tex, uchar4 *out, int w, int h, int n
             for(frame_x = 0; frame_x < delta_w; ++frame_x) {
                 for(frame_y = 0; frame_y < delta_h; ++frame_y) {
                     p = tex2D<uchar4>(tex, x + frame_x, y + frame_y);
-                    r += (p.x / (delta_w * delta_h));
-                    g += (p.y / (delta_w * delta_h));
-                    b += (p.z / (delta_w * delta_h));
+                    r += (1.0 * p.x / (delta_w * delta_h));
+                    g += (1.0 * p.y / (delta_w * delta_h));
+                    b += (1.0 * p.z / (delta_w * delta_h));
                 }
             }
             out[(y / delta_h) * new_w + x / delta_w] = make_uchar4(r, g, b, 0);
