@@ -1,3 +1,4 @@
+%%writefile image.cu
 #include <iostream>
 #include <string>
 #include <stdio.h>
@@ -26,8 +27,8 @@ __global__ void kernel(cudaTextureObject_t tex, uchar4 *out, int w, int h, int n
     int frame_x, frame_y;
     int r, g, b, a;
     uchar4 p;
-    for(y = idy * delta_h; y < h; y += offsety) {
-        for(x = idx * delta_w; x < w; x += offsetx) {
+    for(y = idy * delta_h; y < h; y += offsety * delta_h) {
+        for(x = idx * delta_w; x < w; x += offsetx * delta_w) {
             r = 0, g = 0, b = 0, a = 0;
             for(frame_x = 0; frame_x < delta_w; ++frame_x) {
                 for(frame_y = 0; frame_y < delta_h; ++frame_y) {
@@ -59,8 +60,6 @@ int main() {
     uchar4 *data = (uchar4 *)malloc(sizeof(uchar4) * w * h);
     fread(data, sizeof(uchar4), w * h, fp);
     fclose(fp);
-
-    fprintf(stderr, "%d %d %d %d", w, h, new_w, new_h);
 
     cudaArray *arr;
     cudaChannelFormatDesc ch = cudaCreateChannelDesc<uchar4>();
