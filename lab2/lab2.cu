@@ -84,7 +84,7 @@ int main() {
     CSC(cudaGetLastError());
 
     uchar4 *data2 = (uchar4 *)malloc(sizeof(uchar4) * new_w * new_h);
-    CSC(cudaMemcpy(data, dev_out, sizeof(uchar4) * new_w * new_h, cudaMemcpyDeviceToHost));
+    CSC(cudaMemcpy(data2, dev_out, sizeof(uchar4) * new_w * new_h, cudaMemcpyDeviceToHost));
 
 	  CSC(cudaDestroyTextureObject(tex));
 	  CSC(cudaFreeArray(arr));
@@ -93,7 +93,7 @@ int main() {
     fp = fopen(output.c_str(), "wb");
     fwrite(&new_w, sizeof(int), 1, fp);
     fwrite(&new_h, sizeof(int), 1, fp);
-    fwrite(data, sizeof(uchar4), new_w * new_h, fp);
+    fwrite(data2, sizeof(uchar4), new_w * new_h, fp);
     fclose(fp);
 
     free(data);
