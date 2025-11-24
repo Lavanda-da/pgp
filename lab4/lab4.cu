@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <vector>
 #include <stdio.h>
@@ -55,16 +54,16 @@ int main() {
     cout.tie(nullptr);
 
     int n;
-    cin >> n;
+    scanf("%d", &n);
     double *arr = (double *)malloc(sizeof(double) * n * (n + 1));
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            cin >> arr[i + j * n];
+            scanf("%lf", &arr[i + j * n]);
         }
     }
 
     for (int i = 0; i < n; ++i) {
-        cin >> arr[n * n + i];
+        scanf("%lf", &arr[n * n + i]);
     }
 
     double *dev_arr;
@@ -100,10 +99,10 @@ int main() {
     }
 
     for (int i = 0; i < n; ++i) {
-        cout << res[i] << ' ';
+        printf("%.10f ", res[i]);
     }
 
-	  // CSC(cudaFree(dev_arr));
+	  CSC(cudaFree(dev_arr));
 
     free(arr);
     free(res);
