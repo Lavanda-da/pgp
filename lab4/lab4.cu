@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <vector>
 #include <stdio.h>
@@ -41,25 +42,29 @@ __global__ void kernel(double *arr, int n, int now) {
     int offsety = blockDim.y * gridDim.y;
     
     int x, y;
-    for(x = now + idx + 1; x < n; x += offsetx) {
-        for(y = now + idy + 1; y < n + 1; y += offsety) {
-            arr[y * n + x] = arr[y * n + x] - arr[y * n + now] / arr[now * n + now] * arr[now * n + x];
+    for(x = now + idx + 1; x < n + 1; x += offsetx) {
+        for(y = now + idy + 1; y < n; y += offsety) {
+            arr[x * n + y] -= arr[x * n + now] / arr[now * n + now] * arr[now * n + y];
         }
     }
 }
 
 int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cout.tie(nullptr);
+
     int n;
-    scanf("%d", &n);
+    cin >> n;
     double *arr = (double *)malloc(sizeof(double) * n * (n + 1));
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            scanf("%lf", &arr[i + j * n]);
+            cin >> arr[i + j * n];
         }
     }
 
     for (int i = 0; i < n; ++i) {
-        scanf("%lf", &arr[n * n + i]);
+        cin >> arr[n * n + i];
     }
 
     double *dev_arr;
@@ -95,7 +100,7 @@ int main() {
     }
 
     for (int i = 0; i < n; ++i) {
-        printf("%.10f ", res[i]);
+        cout << res[i] << ' ';
     }
 
 	  CSC(cudaFree(dev_arr));
