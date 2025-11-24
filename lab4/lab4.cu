@@ -42,9 +42,9 @@ __global__ void kernel(double *arr, int n, int now) {
     int offsety = blockDim.y * gridDim.y;
     
     int x, y;
-    for(x = now + idx + 1; x < n + 1; x += offsetx) {
-        for(y = now + idy + 1; y < n; y += offsety) {
-            arr[x * n + y] = arr[x * n + y] - arr[x * n + now] / arr[now * n + now] * arr[now * n + y];
+    for(x = now + idx + 1; x < n; x += offsetx) {
+        for(y = now + idy + 1; y < n + 1; y += offsety) {
+            arr[y * n + x] = arr[y * n + x] - arr[y * n + now] / arr[now * n + now] * arr[now * n + x];
         }
     }
 }
