@@ -1,7 +1,3 @@
-%%writefile image.cu
-
-// lab4
-
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
