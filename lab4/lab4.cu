@@ -31,6 +31,16 @@ __global__ void replace(double *arr, int n, int start, int end) {
     }
 }
 
+__global__ void division(double *arr, int n, int i)
+{
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    int offset = blockDim.x * gridDim.x;
+
+    for (int x = idx + i; x < n + 1; x += offset) {
+        arr[x * n + i] /= arr[i * n + i];
+    }
+}
+
 __global__ void kernel(double *arr, int n, int now) {    
     for(int x = now + blockDim.x * blockIdx.x + threadIdx.x + 1; x < n; x += blockDim.x * gridDim.x) {
         for(int y = now + blockDim.y * blockIdx.y + threadIdx.y + 1; y < n + 1; y += blockDim.y * gridDim.y) {
@@ -71,7 +81,8 @@ int main() {
         if (i * n + i != max_el - p_arr) {
             replace<<< 512, 512 >>>(dev_arr, n, i, max_el - p_arr - i * n);
         }
-        
+
+        division<<< 512, 512 >>>(dev_arr, n, i);
         kernel<<< dim3(32, 32), dim3(32, 32) >>>(dev_arr, n, i);
 
         /* for (int i = 0; i < n * (n + 1); ++i) {
