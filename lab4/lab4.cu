@@ -49,10 +49,6 @@ __global__ void kernel(double *arr, int n, int now) {
 }
 
 int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    cout.tie(nullptr);
-
     int n;
     scanf("%d", &n);
     double *arr = (double *)malloc(sizeof(double) * n * (n + 1));
