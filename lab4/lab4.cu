@@ -64,12 +64,12 @@ int main() {
     comparator cmp;
 
     thrust::device_ptr<double> p_arr = thrust::device_pointer_cast(dev_arr);
-    thrust::device_ptr<double> res;
+    thrust::device_ptr<double> max_el;
     for (int i = 0; i < n - 1; ++i) {
-        res = thrust::max_element(p_arr + i * n + i, p_arr + (i + 1) * n, cmp);
+        max_el = thrust::max_element(p_arr + i * n + i, p_arr + (i + 1) * n, cmp);
         // cout << res - p_arr << ' ' << arr[res - p_arr] << '\n';
-        if (i * n + i != res - p_arr) {
-            replace<<< 512, 512 >>>(dev_arr, n, i, res - p_arr - i * n);
+        if (i * n + i != max_el - p_arr) {
+            replace<<< 512, 512 >>>(dev_arr, n, i, max_el - p_arr - i * n);
         }
         
         kernel<<< dim3(32, 32), dim3(32, 32) >>>(dev_arr, n, i);
