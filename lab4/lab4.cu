@@ -1,3 +1,7 @@
+%%writefile image.cu
+
+// lab4
+
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,25 +27,17 @@ struct comparator {
 };
 
 __global__ void replace(double *arr, int n, int start, int end) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    int offsetx = blockDim.x * gridDim.x;
-    int x;
-    for(x = idx; x < n + 1; x += offsetx) {
-        double tmp = arr[x * n + start];
+    double tmp;
+    for(int x = blockDim.x * blockIdx.x + threadIdx.x; x < n + 1; x += blockDim.x * gridDim.x) {
+        tmp = arr[x * n + start];
         arr[x * n + start] = arr[x * n + end];
         arr[x * n + end] = tmp;
     }
 }
 
-__global__ void kernel(double *arr, int n, int now) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    int idy = blockDim.y * blockIdx.y + threadIdx.y;
-    int offsetx = blockDim.x * gridDim.x;
-    int offsety = blockDim.y * gridDim.y;
-    
-    int x, y;
-    for(x = now + idx + 1; x < n; x += offsetx) {
-        for(y = now + idy + 1; y < n + 1; y += offsety) {
+__global__ void kernel(double *arr, int n, int now) {    
+    for(int x = now + blockDim.x * blockIdx.x + threadIdx.x + 1; x < n; x += blockDim.x * gridDim.x) {
+        for(int y = now + blockDim.y * blockIdx.y + threadIdx.y + 1; y < n + 1; y += blockDim.y * gridDim.y) {
             arr[y * n + x] -= arr[y * n + now] / arr[now * n + now] * arr[now * n + x];
         }
     }
@@ -71,9 +67,10 @@ int main() {
 
     comparator cmp;
 
+    thrust::device_ptr<double> p_arr = thrust::device_pointer_cast(dev_arr);
+    thrust::device_ptr<double> res;
     for (int i = 0; i < n - 1; ++i) {
-        thrust::device_ptr<double> p_arr = thrust::device_pointer_cast(dev_arr);
-        thrust::device_ptr<double> res = thrust::max_element(p_arr + i * n + i, p_arr + (i + 1) * n, cmp);
+        res = thrust::max_element(p_arr + i * n + i, p_arr + (i + 1) * n, cmp);
         // cout << res - p_arr << ' ' << arr[res - p_arr] << '\n';
         if (i * n + i != res - p_arr) {
             replace<<< 512, 512 >>>(dev_arr, n, i, res - p_arr - i * n);
@@ -89,8 +86,9 @@ int main() {
     
     cudaMemcpy(arr, dev_arr, sizeof(double) * n * (n + 1), cudaMemcpyDeviceToHost);
     double *res = (double *)malloc(sizeof(double) * n);
+    double count;
     for (int i = n - 1; i >= 0; --i) {
-        double count = 0;
+        count = 0;
         for (int j = i + 1; j < n; ++j) {
             count += (arr[j * n + i] * res[j]);
         }
