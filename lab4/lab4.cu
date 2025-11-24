@@ -1,6 +1,4 @@
 #include <iostream>
-#include <string>
-#include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 #include <thrust/extrema.h>
@@ -42,9 +40,9 @@ __global__ void kernel(double *arr, int n, int now) {
     int offsety = blockDim.y * gridDim.y;
     
     int x, y;
-    for(x = now + idx + 1; x < n + 1; x += offsetx) {
-        for(y = now + idy + 1; y < n; y += offsety) {
-            arr[x * n + y] -= arr[x * n + now] / arr[now * n + now] * arr[now * n + y];
+    for(x = now + idx + 1; x < n; x += offsetx) {
+        for(y = now + idy + 1; y < n + 1; y += offsety) {
+            arr[y * n + x] -= arr[y * n + now] / arr[now * n + now] * arr[now * n + x];
         }
     }
 }
@@ -78,10 +76,10 @@ int main() {
         thrust::device_ptr<double> res = thrust::max_element(p_arr + i * n + i, p_arr + (i + 1) * n, cmp);
         // cout << res - p_arr << ' ' << arr[res - p_arr] << '\n';
         if (i * n + i != res - p_arr) {
-            replace<<< 1024, 1024 >>>(dev_arr, n, i, res - p_arr - i * n);
+            replace<<< 512, 512 >>>(dev_arr, n, i, res - p_arr - i * n);
         }
         
-        kernel<<< dim3(64, 64), dim3(32, 32) >>>(dev_arr, n, i);
+        kernel<<< dim3(32, 32), dim3(32, 32) >>>(dev_arr, n, i);
 
         /* for (int i = 0; i < n * (n + 1); ++i) {
             cout << arr[i] << ' ';
