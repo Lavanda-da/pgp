@@ -79,11 +79,9 @@ int main() {
         // cout << res - p_arr << ' ' << arr[res - p_arr] << '\n';
         if (i * n + i != res - p_arr) {
             replace<<< 1024, 1024 >>>(dev_arr, n, i, res - p_arr - i * n);
-            CSC(cudaDeviceSynchronize());
         }
         
-        kernel<<< dim3(16, 16), dim3(32, 32) >>>(dev_arr, n, i);
-        CSC(cudaDeviceSynchronize());
+        kernel<<< dim3(64, 64), dim3(32, 32) >>>(dev_arr, n, i);
 
         /* for (int i = 0; i < n * (n + 1); ++i) {
             cout << arr[i] << ' ';
