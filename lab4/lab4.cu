@@ -44,7 +44,7 @@ __global__ void division(double *arr, int n, int i)
 __global__ void kernel(double *arr, int n, int now) {    
     for(int x = now + blockDim.x * blockIdx.x + threadIdx.x + 1; x < n; x += blockDim.x * gridDim.x) {
         for(int y = now + blockDim.y * blockIdx.y + threadIdx.y + 1; y < n + 1; y += blockDim.y * gridDim.y) {
-            arr[y * n + x] -= arr[y * n + now] / arr[now * n + now] * arr[now * n + x];
+            arr[y * n + x] -= arr[y * n + now] * arr[now * n + x];
         }
     }
 }
