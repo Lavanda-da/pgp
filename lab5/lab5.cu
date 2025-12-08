@@ -1,3 +1,5 @@
+%%writefile image.cu
+
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,8 +7,8 @@
 #include <thrust/device_vector.h>
 
 using namespace std;
-using output_type = int;
-// using output_type = unsigned char;
+// using output_type = int;
+using output_type = unsigned char;
 
 const int MAX_BLOCK_SIZE = 256;
 
@@ -140,11 +142,11 @@ int main() {
     output_type *sorted_arr = (output_type *)malloc(sizeof(output_type) * n);
     cudaMemcpy(sorted_arr, res_arr, sizeof(output_type) * n, cudaMemcpyDeviceToHost);
 
-    for (int i = 0; i < n; ++i) {
+    /* for (int i = 0; i < n; ++i) {
         cout << sorted_arr[i] << ' ';
-    }
+    } */
 
-    // fwrite(sorted_arr, sizeof(unsigned char), n, stdout);
+    fwrite(sorted_arr, sizeof(unsigned char), n, stdout);
 
     return 0;
 }
