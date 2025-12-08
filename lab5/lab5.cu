@@ -1,3 +1,5 @@
+%%writefile image.cu
+
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +24,7 @@ do {											                    \
 
 __global__ void hist(int n, unsigned char *in_arr, int *out_arr) {
     __shared__ int sdata[MAX_BLOCK_SIZE];
-    
+
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int offsetx = blockDim.x * gridDim.x;
 
@@ -65,7 +67,7 @@ __global__ void scan(int *in_data, int *out_data) {
         }
         offset <<= 1;
         __syncthreads();
-        
+
     }
 
     if (tid == 0) {
@@ -88,7 +90,7 @@ __global__ void scan(int *in_data, int *out_data) {
     out_data[index] = sdata[tid];
 }
 
-__global__ void kernel(output_type *sorted_arr, int *scan_arr, int n) {
+__global__ void kernel(output_type *sorted_arr, int *scan_arr) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int offsetx = blockDim.x * gridDim.x;
 
@@ -118,27 +120,27 @@ int main() {
     } */
 
     unsigned char *in_arr;
-	CSC(cudaMalloc(&in_arr, sizeof(unsigned char) * n));
+	  CSC(cudaMalloc(&in_arr, sizeof(unsigned char) * n));
     CSC(cudaMemcpy(in_arr, arr, sizeof(unsigned char) * n, cudaMemcpyHostToDevice));
-    
+
     int *out_arr;
-	CSC(cudaMalloc(&out_arr, sizeof(int) * MAX_BLOCK_SIZE));
+	  CSC(cudaMalloc(&out_arr, sizeof(int) * MAX_BLOCK_SIZE));
     CSC(cudaMemset(out_arr, 0, sizeof(int) * MAX_BLOCK_SIZE));
 
     hist<<<1, 128>>>(n, in_arr, out_arr);
 
     int *out_arr2;
-	CSC(cudaMalloc(&out_arr2, sizeof(int) * MAX_BLOCK_SIZE));
+	  CSC(cudaMalloc(&out_arr2, sizeof(int) * MAX_BLOCK_SIZE));
 
     scan<<<2, 256>>>(out_arr, out_arr2);
 
     output_type *res_arr;
-	CSC(cudaMalloc(&res_arr, sizeof(output_type) * MAX_BLOCK_SIZE));
+	  CSC(cudaMalloc(&res_arr, sizeof(output_type) * n));
 
-    kernel<<<128, 128>>>(res_arr, out_arr2, n);
+    kernel<<<128, 128>>>(res_arr, out_arr2);
 
-    output_type *sorted_arr = (output_type *)malloc(sizeof(output_type) * MAX_BLOCK_SIZE);
-    cudaMemcpy(sorted_arr, res_arr, sizeof(output_type) * MAX_BLOCK_SIZE, cudaMemcpyDeviceToHost);
+    output_type *sorted_arr = (output_type *)malloc(sizeof(output_type) * n);
+    cudaMemcpy(sorted_arr, res_arr, sizeof(output_type) * n, cudaMemcpyDeviceToHost);
 
     /* for (int i = 0; i < n; ++i) {
         cout << sorted_arr[i] << ' ';
