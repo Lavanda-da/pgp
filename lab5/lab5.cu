@@ -118,22 +118,22 @@ int main() {
     } */
 
     unsigned char *in_arr;
-	  CSC(cudaMalloc(&in_arr, sizeof(unsigned char) * MAX_BLOCK_SIZE));
+	CSC(cudaMalloc(&in_arr, sizeof(unsigned char) * n));
     CSC(cudaMemcpy(in_arr, arr, sizeof(unsigned char) * n, cudaMemcpyHostToDevice));
     
     int *out_arr;
-	  CSC(cudaMalloc(&out_arr, sizeof(int) * MAX_BLOCK_SIZE));
+	CSC(cudaMalloc(&out_arr, sizeof(int) * MAX_BLOCK_SIZE));
     CSC(cudaMemset(out_arr, 0, sizeof(int) * MAX_BLOCK_SIZE));
 
     hist<<<1, 128>>>(n, in_arr, out_arr);
 
     int *out_arr2;
-	  CSC(cudaMalloc(&out_arr2, sizeof(int) * MAX_BLOCK_SIZE));
+	CSC(cudaMalloc(&out_arr2, sizeof(int) * MAX_BLOCK_SIZE));
 
     scan<<<2, 256>>>(out_arr, out_arr2);
 
     output_type *res_arr;
-	  CSC(cudaMalloc(&res_arr, sizeof(output_type) * MAX_BLOCK_SIZE));
+	CSC(cudaMalloc(&res_arr, sizeof(output_type) * MAX_BLOCK_SIZE));
 
     kernel<<<128, 128>>>(res_arr, out_arr2, n);
 
