@@ -4,6 +4,8 @@
 #include <thrust/extrema.h>
 #include <thrust/device_vector.h>
 
+#define SIZE_BLOCK_SCAN 512
+
 using namespace std;
 // using output_type = int;
 using output_type = unsigned char;
@@ -43,21 +45,18 @@ __global__ void hist(int n, unsigned char *in_arr, int *out_arr) {
     __syncthreads();
 }
 
-__global__ void scan(int *in_data, int *out_data) {
-    __shared__ int sdata[MAX_BLOCK_SIZE];
+__global__ void scan(int *in_data, int *out_data, int *sums) {
+    extern __shared__ int sdata[];
 
     int tid = threadIdx.x;
     int index = blockDim.x * blockIdx.x + threadIdx.x;
     int offset = 1;
 
-    /* sdata[2 * tid] = in_data[2 * tid];
-    sdata[2 * tid + 1] = in_data[2 * tid + 1]; */
-
     sdata[tid] = in_data[index];
 
     __syncthreads();
 
-    for (int s = MAX_BLOCK_SIZE >> 1; s > 0; s >>= 1) {
+    for (int s = SIZE_BLOCK_SCAN >> 1; s > 0; s >>= 1) {
         if (tid < s) {
             int ai = offset * (2 * tid + 1) - 1;
             int bi = offset * (2 * tid + 2) - 1;
@@ -69,10 +68,10 @@ __global__ void scan(int *in_data, int *out_data) {
     }
 
     if (tid == 0) {
-        sdata[MAX_BLOCK_SIZE - 1] = 0;
+        sdata[SIZE_BLOCK_SCAN - 1] = 0;
     }
 
-    for (int s = 1; s < MAX_BLOCK_SIZE; s <<= 1) {
+    for (int s = 1; s < SIZE_BLOCK_SCAN; s <<= 1) {
         offset >>= 1;
         __syncthreads();
         if (tid < s) {
@@ -85,7 +84,13 @@ __global__ void scan(int *in_data, int *out_data) {
     }
     __syncthreads();
 
+    sums[blockIdx.x] = sdata[SIZE_BLOCK_SCAN - 1] + in_data[blockDim.x * (blockIdx.x + 1) - 1];
+    __syncthreads();
+
     out_data[index] = sdata[tid];
+    for (int i = 0; i < blockIdx.x; ++i) {
+        out_data[index] += sums[i];
+    }
 }
 
 __global__ void kernel(output_type *sorted_arr, int *scan_arr, int n) {
@@ -130,7 +135,10 @@ int main() {
     int *out_arr2;
 	  CSC(cudaMalloc(&out_arr2, sizeof(int) * MAX_BLOCK_SIZE));
 
-    scan<<<2, 256>>>(out_arr, out_arr2);
+    int *sums;
+	  CSC(cudaMalloc(&sums, sizeof(int) * MAX_BLOCK_SIZE));
+
+    scan<<<4, SIZE_BLOCK_SCAN, SIZE_BLOCK_SCAN * sizeof(int)>>>(out_arr, out_arr2, sums);
 
     output_type *res_arr;
 	  CSC(cudaMalloc(&res_arr, sizeof(output_type) * n));
@@ -140,7 +148,7 @@ int main() {
     output_type *sorted_arr = (output_type *)malloc(sizeof(output_type) * n);
     cudaMemcpy(sorted_arr, res_arr, sizeof(output_type) * n, cudaMemcpyDeviceToHost);
 
-    /* for (int i = 0; i < n; ++i) {
+    /* for (int i = 0; i < MAX_BLOCK_SIZE; ++i) {
         cout << sorted_arr[i] << ' ';
     } */
 
