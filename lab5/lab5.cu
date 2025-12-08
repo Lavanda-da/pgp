@@ -5,10 +5,13 @@
 #include <thrust/device_vector.h>
 
 #define SIZE_BLOCK_SCAN 512
+#define NUM_BANKS 32
+#define LOG_NUM_BANKS 5
+#define CONFLICT_FREE_OFFSET(n)((n) >> NUM_BANKS + (n) >> (2 * LOG_NUM_BANKS))
 
 using namespace std;
-// using output_type = int;
-using output_type = unsigned char;
+using output_type = int;
+// using output_type = unsigned char;
 
 const int MAX_BLOCK_SIZE = 256;
 
@@ -52,7 +55,7 @@ __global__ void scan(int *in_data, int *out_data, int *sums) {
     int index = blockDim.x * blockIdx.x + threadIdx.x;
     int offset = 1;
 
-    sdata[tid] = in_data[index];
+    sdata[tid + CONFLICT_FREE_OFFSET(tid)] = in_data[index];
 
     __syncthreads();
 
@@ -60,7 +63,7 @@ __global__ void scan(int *in_data, int *out_data, int *sums) {
         if (tid < s) {
             int ai = offset * (2 * tid + 1) - 1;
             int bi = offset * (2 * tid + 2) - 1;
-            sdata[bi] += sdata[ai];
+            sdata[bi + CONFLICT_FREE_OFFSET(bi)] += sdata[ai + CONFLICT_FREE_OFFSET(ai)];
         }
         offset <<= 1;
         __syncthreads();
@@ -68,7 +71,7 @@ __global__ void scan(int *in_data, int *out_data, int *sums) {
     }
 
     if (tid == 0) {
-        sdata[SIZE_BLOCK_SCAN - 1] = 0;
+        sdata[SIZE_BLOCK_SCAN - 1 + CONFLICT_FREE_OFFSET(SIZE_BLOCK_SCAN - 1)] = 0;
     }
 
     for (int s = 1; s < SIZE_BLOCK_SCAN; s <<= 1) {
@@ -77,17 +80,17 @@ __global__ void scan(int *in_data, int *out_data, int *sums) {
         if (tid < s) {
             int ai = offset * (2 * tid + 1) - 1;
             int bi = offset * (2 * tid + 2) - 1;
-            int tmp = sdata[ai];
-            sdata[ai] = sdata[bi];
-            sdata[bi] += tmp;
+            int tmp = sdata[ai + CONFLICT_FREE_OFFSET(ai)];
+            sdata[ai + CONFLICT_FREE_OFFSET(ai)] = sdata[bi + CONFLICT_FREE_OFFSET(ai)];
+            sdata[bi + CONFLICT_FREE_OFFSET(bi)] += tmp;
         }
     }
     __syncthreads();
 
-    sums[blockIdx.x] = sdata[SIZE_BLOCK_SCAN - 1] + in_data[blockDim.x * (blockIdx.x + 1) - 1];
+    sums[blockIdx.x] = sdata[SIZE_BLOCK_SCAN - 1 + CONFLICT_FREE_OFFSET(SIZE_BLOCK_SCAN - 1)] + in_data[blockDim.x * (blockIdx.x + 1) - 1];
     __syncthreads();
 
-    out_data[index] = sdata[tid];
+    out_data[index] = sdata[tid + CONFLICT_FREE_OFFSET(tid)];
     for (int i = 0; i < blockIdx.x; ++i) {
         out_data[index] += sums[i];
     }
@@ -138,7 +141,7 @@ int main() {
     int *sums;
 	  CSC(cudaMalloc(&sums, sizeof(int) * MAX_BLOCK_SIZE));
 
-    scan<<<4, SIZE_BLOCK_SCAN, SIZE_BLOCK_SCAN * sizeof(int)>>>(out_arr, out_arr2, sums);
+    scan<<<4, SIZE_BLOCK_SCAN, (SIZE_BLOCK_SCAN + 1) * sizeof(int)>>>(out_arr, out_arr2, sums);
 
     output_type *res_arr;
 	  CSC(cudaMalloc(&res_arr, sizeof(output_type) * n));
@@ -148,11 +151,11 @@ int main() {
     output_type *sorted_arr = (output_type *)malloc(sizeof(output_type) * n);
     cudaMemcpy(sorted_arr, res_arr, sizeof(output_type) * n, cudaMemcpyDeviceToHost);
 
-    /* for (int i = 0; i < MAX_BLOCK_SIZE; ++i) {
+    for (int i = 0; i < MAX_BLOCK_SIZE; ++i) {
         cout << sorted_arr[i] << ' ';
-    } */
+    }
 
-    fwrite(sorted_arr, sizeof(unsigned char), n, stdout);
+    // fwrite(sorted_arr, sizeof(unsigned char), n, stdout);
 
     return 0;
 }
