@@ -5,6 +5,7 @@
 #include <thrust/device_vector.h>
 
 using namespace std;
+// using output_type = int;
 using output_type = unsigned char;
 
 const int MAX_BLOCK_SIZE = 256;
@@ -91,8 +92,8 @@ __global__ void kernel(output_type *sorted_arr, int *scan_arr, int n) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     int offsetx = blockDim.x * gridDim.x;
 
-    for(int x = idx; x < n; x += offsetx) {
-        int end = (x != n - 1 ? scan_arr[x + 1] : n);
+    for(int x = idx; x < MAX_BLOCK_SIZE; x += offsetx) {
+        int end = (x != MAX_BLOCK_SIZE - 1 ? scan_arr[x + 1] : MAX_BLOCK_SIZE - 1);
         for (int i = scan_arr[x]; i < end; ++i) {
             sorted_arr[i] = x;
         }
@@ -132,12 +133,12 @@ int main() {
     scan<<<2, 256>>>(out_arr, out_arr2);
 
     output_type *res_arr;
-	  CSC(cudaMalloc(&res_arr, sizeof(output_type) * n));
+	  CSC(cudaMalloc(&res_arr, sizeof(output_type) * MAX_BLOCK_SIZE));
 
     kernel<<<128, 128>>>(res_arr, out_arr2, n);
 
-    output_type *sorted_arr = (output_type *)malloc(sizeof(output_type) * n);
-    cudaMemcpy(sorted_arr, res_arr, sizeof(output_type) * n, cudaMemcpyDeviceToHost);
+    output_type *sorted_arr = (output_type *)malloc(sizeof(output_type) * MAX_BLOCK_SIZE);
+    cudaMemcpy(sorted_arr, res_arr, sizeof(output_type) * MAX_BLOCK_SIZE, cudaMemcpyDeviceToHost);
 
     /* for (int i = 0; i < n; ++i) {
         cout << sorted_arr[i] << ' ';
