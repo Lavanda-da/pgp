@@ -10,8 +10,8 @@
 #define CONFLICT_FREE_OFFSET(n)((n) >> NUM_BANKS + (n) >> (2 * LOG_NUM_BANKS))
 
 using namespace std;
-using output_type = int;
-// using output_type = unsigned char;
+// using output_type = int;
+using output_type = unsigned char;
 
 const int MAX_BLOCK_SIZE = 256;
 
@@ -151,11 +151,11 @@ int main() {
     output_type *sorted_arr = (output_type *)malloc(sizeof(output_type) * n);
     cudaMemcpy(sorted_arr, res_arr, sizeof(output_type) * n, cudaMemcpyDeviceToHost);
 
-    for (int i = 0; i < MAX_BLOCK_SIZE; ++i) {
+    /* for (int i = 0; i < MAX_BLOCK_SIZE; ++i) {
         cout << sorted_arr[i] << ' ';
-    }
+    } */
 
-    // fwrite(sorted_arr, sizeof(unsigned char), n, stdout);
+    fwrite(sorted_arr, sizeof(unsigned char), n, stdout);
 
     return 0;
 }
