@@ -59,7 +59,7 @@ struct trig {
 trig trigs[38];
 
 void build_space() {
-    trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}};
+    trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 0, 0, 0}};
     trigs[1] = {{-5, 5, 0}, {5, -5, 0}, {5, 5, 0}, {100, 100, 100, 0}};
 
     vec3 point_0 = {0.5 * (-1.632990) + 2, 0.5 * (-0.942809), 0.5 * (-0.666667) + 2};
@@ -227,7 +227,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         vec3 refl_dir = reflect(dir, normal);
 
         // Сдвигаем точку, чтобы избежать self-intersection
-        double eps = 1e-5;
+        double eps = 1 - 1e-5;
         vec3 offset_pos = {
             pix_pos.x + eps * normal.x,
             pix_pos.y + eps * normal.y,
