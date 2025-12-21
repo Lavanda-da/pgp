@@ -157,11 +157,11 @@ void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, d
             pix_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
             normal = norm(prod(e1, e2));
             // Исправляем ориентацию нормали
-            if (dot(dir, normal) > 0) {
-                normal.x = -normal.x; 
-                normal.y = -normal.y; 
-                normal.z = -normal.z;
-            }
+            // if (dot(dir, normal) > 0) {
+            //     normal.x = -normal.x; 
+            //     normal.y = -normal.y; 
+            //     normal.z = -normal.z;
+            // }
         }
     }
 }
@@ -231,12 +231,8 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         vec3 refl_dir = reflect(dir, normal);
 
         // Сдвигаем точку, чтобы избежать self-intersection
-        double eps = 1e-5;
-        vec3 offset_pos = {
-            pix_pos.x + eps * normal.x,
-            pix_pos.y + eps * normal.y,
-            pix_pos.z + eps * normal.z
-        };
+        double eps = 1 - 1e-5;
+        vec3 offset_pos = add(pos, mult(dir, dir, dir, (vec3){ts * eps, ts * eps, ts * eps}));
 
         vec3 refl_target, refl_normal;
         int refl_k;
