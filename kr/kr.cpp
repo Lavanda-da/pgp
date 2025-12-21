@@ -67,42 +67,30 @@ void build_space() {
     vec3 point_2 = {0.5 * 1.632990 + 2, 0.5 * (-0.942809), 0.5 * (-0.666667) + 2};
     vec3 point_3 = {0.000000 + 2, 0.000000, 0.5 * 2.000000 + 2};
 
-    trigs[2] = {point_0, point_1, point_2, {255, 0, 0, 0}}; // основание
+    trigs[2] = {point_0, point_1, point_2, {255, 0, 0, 0}};
     trigs[3] = {point_0, point_3, point_1, {255, 0, 0, 0}};
     trigs[4] = {point_1, point_3, point_2, {255, 0, 0, 0}};
     trigs[5] = {point_2, point_3, point_0, {255, 0, 0, 0}};
 
-    // === ЗЕЛЁНЫЙ КУБ (trigs[6..17]) — ИСПРАВЛЕН ===
-    vec3 p0 = {-3, 0, 1};  // лево, низ, зад
-    vec3 p1 = {-3, 1, 1};  // лево, верх, зад
-    vec3 p2 = {-2, 1, 1};  // право, верх, зад
-    vec3 p3 = {-2, 0, 1};  // право, низ, зад
-    vec3 p4 = {-3, 0, 2};  // лево, низ, перед
-    vec3 p5 = {-3, 1, 2};  // лево, верх, перед
-    vec3 p6 = {-2, 1, 2};  // право, верх, перед
-    vec3 p7 = {-2, 0, 2};  // право, низ, перед
+    vec3 p0 = {-3, 0, 1};
+    vec3 p1 = {-3, 1, 1};
+    vec3 p2 = {-2, 1, 1};
+    vec3 p3 = {-2, 0, 1};
+    vec3 p4 = {-3, 0, 2};
+    vec3 p5 = {-3, 1, 2};
+    vec3 p6 = {-2, 1, 2};
+    vec3 p7 = {-2, 0, 2};
 
-    // Задняя грань (z=1): нормаль (0,0,-1) → CCW: p0 → p1 → p2 → p3
     trigs[6]  = {p0, p1, p2, {0, 255, 0, 0}};
     trigs[7]  = {p0, p2, p3, {0, 255, 0, 0}};
-
-    // Передняя грань (z=2): нормаль (0,0,+1) → CCW: p4 → p7 → p6 → p5
     trigs[8]  = {p4, p7, p6, {0, 255, 0, 0}};
     trigs[9]  = {p4, p6, p5, {0, 255, 0, 0}};
-
-    // Левая грань (x=-3): нормаль (-1,0,0) → CCW: p4 → p5 → p1 → p0
     trigs[10] = {p4, p5, p1, {0, 255, 0, 0}};
     trigs[11] = {p4, p1, p0, {0, 255, 0, 0}};
-
-    // Правая грань (x=-2): нормаль (+1,0,0) → CCW: p3 → p2 → p6 → p7
     trigs[12] = {p3, p2, p6, {0, 255, 0, 0}};
     trigs[13] = {p3, p6, p7, {0, 255, 0, 0}};
-
-    // Нижняя грань (y=0): нормаль (0,-1,0) → CCW: p0 → p3 → p7 → p4
     trigs[14] = {p0, p3, p7, {0, 255, 0, 0}};
     trigs[15] = {p0, p7, p4, {0, 255, 0, 0}};
-
-    // Верхняя грань (y=1): нормаль (0,+1,0) → CCW: p1 → p5 → p6 → p2
     trigs[16] = {p1, p5, p6, {0, 255, 0, 0}};
     trigs[17] = {p1, p6, p2, {0, 255, 0, 0}};
 
@@ -141,16 +129,6 @@ void build_space() {
     trigs[37] = {point_4, point_8, point_0, {0, 0, 255, 0}};
 }
 
-
-//     // for(int i = 0; i < 38; ++i) {
-//     //     print(trigs[i].a);
-//     //     print(trigs[i].b);
-//     //     print(trigs[i].c);
-//     //     print(trigs[i].a);
-//     //     printf("\n\n\n");
-//     // }
-//     // printf("\n\n\n");
-
 int set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal) {
     int k, k_min = -1;
     double ts_min;
@@ -178,54 +156,70 @@ int set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal) {
     return k_min;
 }
 
+vec3 reflect(vec3 I, vec3 N) {
+    double dotIN = dot(I, N);
+    return (vec3){
+        I.x - 2.0 * dotIN * N.x,
+        I.y - 2.0 * dotIN * N.y,
+        I.z - 2.0 * dotIN * N.z
+    };
+}
+
 uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     vec3 pix_pos, normal;
-    
     int k_min = set_position(pos, dir, pix_pos, normal);
-    uchar4 pix_color;
-    if (k_min == -1) return {0, 0, 0, 0};
-    else pix_color = trigs[k_min].color;
 
-    // Базовый цвет треугольника (как float от 0 до 1)
-    double kd_r = pix_color.r / 255.0;
-    double kd_g = pix_color.g / 255.0;
-    double kd_b = pix_color.b / 255.0;
-    double ka_r = kd_r * 0.1; // ambient = 10% от диффузного
-    double ka_g = kd_g * 0.1;
-    double ka_b = kd_b * 0.1;
-    double ks_r = 1.0; // белый зеркальный блик
-    double ks_g = 1.0;
-    double ks_b = 1.0;
-    double shininess = 32.0;
+    if (k_min == -1) {
+        return (uchar4){0, 0, 0, 0};
+    }
 
-    double I_r = ka_r * 0.2;
-    double I_g = ka_g * 0.2;
-    double I_b = ka_b * 0.2;
+    trig hit = trigs[k_min];
+    uchar4 base_color = hit.color;
+    double kd_r = base_color.r / 255.0;
+    double kd_g = base_color.g / 255.0;
+    double kd_b = base_color.b / 255.0;
 
-    vec3 view_dir = norm(diff(pos, pix_pos));
+    // === Ambient (минимальный свет) ===
+    double I_r = kd_r * 0.1;
+    double I_g = kd_g * 0.1;
+    double I_b = kd_b * 0.1;
 
+    // === Diffuse lighting from lights ===
     for (int i = 0; i < count_lights; ++i) {
         vec3 light_dir = norm(diff(lights[i], pix_pos));
-
-        // // Пускаем луч от pix_pos в направлении light_dir
-        // vec3 shadow_pos, shadow_normal;
-        // int shadow_hit = set_position(lights[i], norm(diff(pix_pos, lights[i])), shadow_pos, shadow_normal);
-        // if (shadow_hit != -1 && shadow_hit != k_min) return {0, 0, 0, 0};
         double NdotL = dot(normal, light_dir);
         if (NdotL < 0) NdotL = 0;
-
         I_r += kd_r * NdotL;
         I_g += kd_g * NdotL;
         I_b += kd_b * NdotL;
     }
 
-    // Ограничение [0, 1]
-    if (I_r > 1.0) I_r = 1.0;
-    if (I_g > 1.0) I_g = 1.0;
-    if (I_b > 1.0) I_b = 1.0;
-    if (I_r < 0.0) I_r = 0.0;
-    if (I_g < 0.0) I_g = 0.0;
-    if (I_b < 0.0) I_b = 0.0;
+    // === Reflection (без рекурсии) ===
+    double ks = 0.5;
+    if (ks > 0.0) {
+        vec3 refl_dir = reflect(dir, normal);  // отражённое направление
+        vec3 refl_target, refl_normal;
+        int refl_k = set_position(pix_pos, refl_dir, refl_target, refl_normal);
+
+        if (refl_k != -1) {
+            // Берём цвет того, что "увидел" отражённый луч
+            uchar4 refl_color = trigs[refl_k].color;
+            double refl_r = refl_color.r / 255.0;
+            double refl_g = refl_color.g / 255.0;
+            double refl_b = refl_color.b / 255.0;
+
+            // Смешиваем с коэффициентом ks
+            I_r = (1.0 - ks) * I_r + ks * refl_r;
+            I_g = (1.0 - ks) * I_g + ks * refl_g;
+            I_b = (1.0 - ks) * I_b + ks * refl_b;
+        }
+        // Если не попал — ничего не добавляем (можно добавить фон, но у тебя его нет)
+    }
+
+    // === Clamp to [0, 1] ===
+    I_r = fmax(0.0, fmin(1.0, I_r));
+    I_g = fmax(0.0, fmin(1.0, I_g));
+    I_b = fmax(0.0, fmin(1.0, I_b));
 
     return (uchar4){
         (uchar)(I_r * 255),
