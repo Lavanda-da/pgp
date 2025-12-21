@@ -59,7 +59,7 @@ struct trig {
 trig trigs[38];
 
 void build_space() {
-    trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 0, 0, 0}};
+    trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}};
     trigs[1] = {{-5, 5, 0}, {5, -5, 0}, {5, 5, 0}, {100, 100, 100, 0}};
 
     vec3 point_0 = {0.5 * (-1.632990) + 2, 0.5 * (-0.942809), 0.5 * (-0.666667) + 2};
@@ -129,37 +129,43 @@ void build_space() {
     trigs[37] = {point_4, point_8, point_0, {0, 0, 255, 0}};
 }
 
-void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, double &ts) {
-    int k;
+void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, double &ts_min, int ignore_index) {
     k_min = -1;
-    double ts_min;
-    for (k = 0; k < 38; ++k) {
+    ts_min = 1e300; // большое число
+
+    for (int k = 0; k < 38; ++k) {
+        if (k == ignore_index) continue; // ←←← ИГНОРИРУЕМ текущий треугольник
+
         vec3 e1 = diff(trigs[k].b, trigs[k].a);
         vec3 e2 = diff(trigs[k].c, trigs[k].a);
         vec3 p = prod(dir, e2);
         double div = dot(p, e1);
         if (fabs(div) < 1e-10) continue;
+
         vec3 t = diff(pos, trigs[k].a);
         double u = dot(p, t) / div;
         if (u < 0. || u > 1.) continue;
+
         vec3 q = prod(t, e1);
         double v = dot(q, dir) / div;
         if (v < 0. || u + v > 1.) continue;
+
         double ts = dot(q, e2) / div;
-        if (ts < 0.) continue;
+        if (ts < 1e-6) continue; // ←←← минимальное расстояние (защита от self-intersection)
+
         if (k_min == -1 || ts < ts_min) {
             k_min = k;
             ts_min = ts;
             pix_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
-            normal = norm(prod(e1, e2));
-            // if (dot(dir, normal) > 0) {
-            //     normal.x = -normal.x;
-            //     normal.y = -normal.y;
-            //     normal.z = -normal.z;
-            // }
+            vec3 normal = norm(prod(e1, e2));
+            // Исправляем ориентацию нормали
+            if (dot(dir, normal) > 0) {
+                normal.x = -normal.x; 
+                normal.y = -normal.y; 
+                normal.z = -normal.z;
+            }
         }
     }
-    // return k_min;
 }
 
 vec3 reflect(vec3 I, vec3 N) {
@@ -209,7 +215,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     vec3 pix_pos, normal;
     int k_min;
     double ts;
-    set_position(pos, dir, pix_pos, normal, k_min, ts);
+    set_position(pos, dir, pix_pos, normal, k_min, ts, -1);
 
     if (k_min == -1) {
         return (uchar4){0, 0, 0, 0};
@@ -237,7 +243,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         vec3 refl_target, refl_normal;
         int refl_k;
         double refl_ts;
-        set_position(offset_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
+        set_position(offset_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts, k_min);
 
         if (refl_k != -1) {
             // ←←← ВОТ ОНО: освещённый цвет отражённой точки!
@@ -307,7 +313,7 @@ int main() {
 
     for (int k = 0; k < 100; ++k) {
         pc = (vec3) {3.5 * sin(0.05 * k), 2. * cos(0.05 * k), 3. + sin(0.1 * k)};
-        pv = (vec3) {3. * sin(0.05 * k + M_PI), 3. * cos(0.5 * k + M_PI), 0.};
+        pv = (vec3) {sin(0.05 * k + M_PI), cos(0.5 * k + M_PI), 1.};
         render(pc, pv, w, h, 120, data, count_lights, lights);
 
         sprintf(buff, "res/%d.data", k);
