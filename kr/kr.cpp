@@ -264,81 +264,53 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     if (k_min == -1) return {0, 0, 0, 0};
     else pix_color = trigs[k_min].color;
 
-    pix_color.r /= 255.;
-    pix_color.g /= 255.;
-    pix_color.b /= 255.;
+    // Базовый цвет треугольника (как float от 0 до 1)
+    double kd_r = pix_color.r / 255.0;
+    double kd_g = pix_color.g / 255.0;
+    double kd_b = pix_color.b / 255.0;
+    double ka_r = kd_r * 0.1; // ambient = 10% от диффузного
+    double ka_g = kd_g * 0.1;
+    double ka_b = kd_b * 0.1;
+    double ks_r = 1.0; // белый зеркальный блик
+    double ks_g = 1.0;
+    double ks_b = 1.0;
+    double shininess = 32.0;
 
-    pix_color.r *= 0.2;
-    pix_color.g *= 0.2;
-    pix_color.b *= 0.2;
+    double I_r = ka_r * 0.2;
+    double I_g = ka_g * 0.2;
+    double I_b = ka_b * 0.2;
 
     vec3 view_dir = norm(diff(pos, pix_pos));
 
     for (int i = 0; i < count_lights; ++i) {
         vec3 light_dir = norm(diff(lights[i], pix_pos));
+
+        // // Пускаем луч от pix_pos в направлении light_dir
+        // vec3 shadow_pos, shadow_normal;
+        // int shadow_hit = set_position(lights[i], norm(diff(pix_pos, lights[i])), shadow_pos, shadow_normal);
+        // if (shadow_hit != -1 && shadow_hit != k_min) return {0, 0, 0, 0};
         double NdotL = dot(normal, light_dir);
         if (NdotL < 0) NdotL = 0;
-        pix_color.r += pix_color.r * NdotL;
-        pix_color.g += pix_color.g * NdotL;
-        pix_color.b += pix_color.b * NdotL;
+
+        I_r += kd_r * NdotL;
+        I_g += kd_g * NdotL;
+        I_b += kd_b * NdotL;
     }
 
-    if (pix_color.r > 1.) pix_color.r = 1.;
-    if (pix_color.g > 1.) pix_color.g = 1.;
-    if (pix_color.b > 1.) pix_color.b = 1.;
+    // Ограничение [0, 1]
+    if (I_r > 1.0) I_r = 1.0;
+    if (I_g > 1.0) I_g = 1.0;
+    if (I_b > 1.0) I_b = 1.0;
+    if (I_r < 0.0) I_r = 0.0;
+    if (I_g < 0.0) I_g = 0.0;
+    if (I_b < 0.0) I_b = 0.0;
 
-    pix_color.r *= 255.;
-    pix_color.g *= 255.;
-    pix_color.b *= 255.;
-
-    return pix_color;
-    // // Базовый цвет треугольника (как float от 0 до 1)
-    // double kd_r = pix_color.r / 255.0;
-    // double kd_g = pix_color.g / 255.0;
-    // double kd_b = pix_color.b / 255.0;
-    // double ka_r = kd_r * 0.1; // ambient = 10% от диффузного
-    // double ka_g = kd_g * 0.1;
-    // double ka_b = kd_b * 0.1;
-    // double ks_r = 1.0; // белый зеркальный блик
-    // double ks_g = 1.0;
-    // double ks_b = 1.0;
-    // double shininess = 32.0;
-
-    // double I_r = ka_r * 0.2;
-    // double I_g = ka_g * 0.2;
-    // double I_b = ka_b * 0.2;
-
-    // vec3 view_dir = norm(diff(pos, pix_pos));
-
-    // for (int i = 0; i < count_lights; ++i) {
-    //     vec3 light_dir = norm(diff(lights[i], pix_pos));
-
-    //     // // Пускаем луч от pix_pos в направлении light_dir
-    //     // vec3 shadow_pos, shadow_normal;
-    //     // int shadow_hit = set_position(lights[i], norm(diff(pix_pos, lights[i])), shadow_pos, shadow_normal);
-    //     // if (shadow_hit != -1 && shadow_hit != k_min) return {0, 0, 0, 0};
-    //     double NdotL = dot(normal, light_dir);
-    //     if (NdotL < 0) NdotL = 0;
-
-    //     I_r += kd_r * NdotL;
-    //     I_g += kd_g * NdotL;
-    //     I_b += kd_b * NdotL;
-    // }
-
-    // // Ограничение [0, 1]
-    // if (I_r > 1.0) I_r = 1.0;
-    // if (I_g > 1.0) I_g = 1.0;
-    // if (I_b > 1.0) I_b = 1.0;
-    // if (I_r < 0.0) I_r = 0.0;
-    // if (I_g < 0.0) I_g = 0.0;
-    // if (I_b < 0.0) I_b = 0.0;
-
-    // return (uchar4){
-    //     (uchar)(I_r * 255),
-    //     (uchar)(I_g * 255),
-    //     (uchar)(I_b * 255),
-    //     0
-    // };
+    return (uchar4){
+        (uchar)(I_r * 255),
+        (uchar)(I_g * 255),
+        (uchar)(I_b * 255),
+        0
+    };
 }
 
 void render(vec3 pc, vec3 pv, int w, int h, double angle, uchar4 *data, int count_lights, vec3 *lights) {
