@@ -261,11 +261,29 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     
     int k_min = set_position(pos, dir, pix_pos, normal);
     uchar4 pix_color;
-    if (k_min == -1) pix_color = {0, 0, 0, 0};
+    if (k_min == -1) return {0, 0, 0, 0};
     else pix_color = trigs[k_min].color;
 
-    return pix_color;
+    pix_color.r *= 0.2;
+    pix_color.g *= 0.2;
+    pix_color.b *= 0.2;
 
+    vec3 view_dir = norm(diff(pos, pix_pos));
+
+    for (int i = 0; i < count_lights; ++i) {
+        vec3 light_dir = norm(diff(lights[i], pix_pos));
+        double NdotL = dot(normal, light_dir);
+        if (NdotL < 0) NdotL = 0;
+        pix_color.r += pix_color.r * NdotL;
+        pix_color.g += pix_color.g * NdotL;
+        pix_color.b += pix_color.b * NdotL;
+    }
+
+    if (pix_color.r > 255) pix_color.r = 255;
+    if (pix_color.g > 255) pix_color.g = 255;
+    if (pix_color.b > 255) pix_color.b = 255;
+
+    return pix_color;
     // // Базовый цвет треугольника (как float от 0 до 1)
     // double kd_r = pix_color.r / 255.0;
     // double kd_g = pix_color.g / 255.0;
