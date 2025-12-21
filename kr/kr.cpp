@@ -129,14 +129,12 @@ void build_space() {
     trigs[37] = {point_4, point_8, point_0, {0, 0, 255, 0}};
 }
 
-void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, double &ts_min, int ignore_index) {
+void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, double &ts_min) {
     k_min = -1;
     ts_min = 1e300; // большое число
 
     for (int k = 0; k < 38; ++k) {
-        if (k == ignore_index) continue; // ←←← ИГНОРИРУЕМ текущий треугольник
-
-        vec3 e1 = diff(trigs[k].b, trigs[k].a);
+                vec3 e1 = diff(trigs[k].b, trigs[k].a);
         vec3 e2 = diff(trigs[k].c, trigs[k].a);
         vec3 p = prod(dir, e2);
         double div = dot(p, e1);
@@ -157,7 +155,7 @@ void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, d
             k_min = k;
             ts_min = ts;
             pix_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
-            vec3 normal = norm(prod(e1, e2));
+            normal = norm(prod(e1, e2));
             // Исправляем ориентацию нормали
             if (dot(dir, normal) > 0) {
                 normal.x = -normal.x; 
@@ -215,7 +213,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     vec3 pix_pos, normal;
     int k_min;
     double ts;
-    set_position(pos, dir, pix_pos, normal, k_min, ts, -1);
+    set_position(pos, dir, pix_pos, normal, k_min, ts);
 
     if (k_min == -1) {
         return (uchar4){0, 0, 0, 0};
@@ -233,7 +231,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         vec3 refl_dir = reflect(dir, normal);
 
         // Сдвигаем точку, чтобы избежать self-intersection
-        double eps = 1 - 1e-5;
+        double eps = 1e-5;
         vec3 offset_pos = {
             pix_pos.x + eps * normal.x,
             pix_pos.y + eps * normal.y,
@@ -243,7 +241,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         vec3 refl_target, refl_normal;
         int refl_k;
         double refl_ts;
-        set_position(offset_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts, k_min);
+        set_position(offset_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
 
         if (refl_k != -1) {
             // ←←← ВОТ ОНО: освещённый цвет отражённой точки!
