@@ -152,6 +152,12 @@ void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, d
             ts_min = ts;
             pix_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
             normal = norm(prod(e1, e2));
+            // Исправляем ориентацию нормали: она должна смотреть НАВСТРЕЧУ лучу (т.е. в сторону источника)
+            if (dot(dir, normal) > 0) {
+                normal.x = -normal.x;
+                normal.y = -normal.y;
+                normal.z = -normal.z;
+            }
         }
     }
     // return k_min;
@@ -205,7 +211,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         int refl_k;
         vec3 pix_pos_relf = add(pos, mult(dir, dir, dir, (vec3){ts * 0.99999, ts * 0.99999, ts * 0.99999}));
         double refl_ts;
-        set_position(pix_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
+        set_position(pix_pos_relf, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
 
         if (refl_k != -1) {
             // Берём цвет того, что "увидел" отражённый луч
