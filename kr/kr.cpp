@@ -5,10 +5,10 @@
 typedef unsigned char uchar;
 
 struct uchar4 {
-    uchar r;
-    uchar g;
-    uchar b;
-    uchar a;
+    uchar r = 0;
+    uchar g = 0;
+    uchar b = 0;
+    uchar a = 0;
 };
 
 struct vec3 {
@@ -152,7 +152,6 @@ void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, d
             ts_min = ts;
             pix_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
             normal = norm(prod(e1, e2));
-            // Исправляем ориентацию нормали: она должна смотреть НАВСТРЕЧУ лучу (т.е. в сторону источника)
             if (dot(dir, normal) > 0) {
                 normal.x = -normal.x;
                 normal.y = -normal.y;
@@ -172,6 +171,40 @@ vec3 reflect(vec3 I, vec3 N) {
     };
 }
 
+// Вычисляет освещённый цвет точки (без отражения/преломления!)
+uchar4 shade(vec3 point, vec3 normal, uchar4 base_color, int count_lights, vec3 *lights) {
+    double kd_r = base_color.r / 255.0;
+    double kd_g = base_color.g / 255.0;
+    double kd_b = base_color.b / 255.0;
+
+    // Ambient
+    double I_r = kd_r * 0.1;
+    double I_g = kd_g * 0.1;
+    double I_b = kd_b * 0.1;
+
+    // Diffuse
+    for (int i = 0; i < count_lights; ++i) {
+        vec3 light_dir = norm(diff(lights[i], point));
+        double NdotL = dot(normal, light_dir);
+        if (NdotL < 0) NdotL = 0;
+        I_r += kd_r * NdotL;
+        I_g += kd_g * NdotL;
+        I_b += kd_b * NdotL;
+    }
+
+    // Clamp
+    I_r = fmax(0.0, fmin(1.0, I_r));
+    I_g = fmax(0.0, fmin(1.0, I_g));
+    I_b = fmax(0.0, fmin(1.0, I_b));
+
+    return (uchar4){
+        (uchar)(I_r * 255),
+        (uchar)(I_g * 255),
+        (uchar)(I_b * 255),
+        0
+    };
+}
+
 uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     vec3 pix_pos, normal;
     int k_min;
@@ -182,56 +215,48 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         return (uchar4){0, 0, 0, 0};
     }
 
-    trig hit = trigs[k_min];
-    uchar4 base_color = hit.color;
-    double kd_r = base_color.r / 255.0;
-    double kd_g = base_color.g / 255.0;
-    double kd_b = base_color.b / 255.0;
+    // Основной цвет с освещением
+    uchar4 base_lit = shade(pix_pos, normal, trigs[k_min].color, count_lights, lights);
+    double I_r = base_lit.r / 255.0;
+    double I_g = base_lit.g / 255.0;
+    double I_b = base_lit.b / 255.0;
 
-    // === Ambient (минимальный свет) ===
-    double I_r = kd_r * 0.1;
-    double I_g = kd_g * 0.1;
-    double I_b = kd_b * 0.1;
-
-    // === Diffuse lighting from lights ===
-    for (int i = 0; i < count_lights; ++i) {
-        vec3 light_dir = norm(diff(lights[i], pix_pos));
-        double NdotL = dot(normal, light_dir);
-        if (NdotL < 0) NdotL = 0;
-        I_r += kd_r * NdotL;
-        I_g += kd_g * NdotL;
-        I_b += kd_b * NdotL;
-    }
-
-    // === Reflection (без рекурсии) ===
-    double ks = 0.5;
+    // === Отражение (один уровень) ===
+    double ks = 0.5;  // или trigs[k_min].ks, если добавишь
     if (ks > 0.0) {
-        vec3 refl_dir = reflect(dir, normal);  // отражённое направление
+        vec3 refl_dir = reflect(dir, normal);
+
+        // Сдвигаем точку, чтобы избежать self-intersection
+        double eps = 1e-5;
+        vec3 offset_pos = {
+            pix_pos.x + eps * normal.x,
+            pix_pos.y + eps * normal.y,
+            pix_pos.z + eps * normal.z
+        };
+
         vec3 refl_target, refl_normal;
         int refl_k;
-        vec3 pix_pos_relf = add(pos, mult(dir, dir, dir, (vec3){ts * 0.99999, ts * 0.99999, ts * 0.99999}));
         double refl_ts;
-        set_position(pix_pos_relf, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
+        set_position(offset_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
 
         if (refl_k != -1) {
-            // Берём цвет того, что "увидел" отражённый луч
-            uchar4 refl_color = trigs[refl_k].color;
-            double refl_r = refl_color.r / 255.0;
-            double refl_g = refl_color.g / 255.0;
-            double refl_b = refl_color.b / 255.0;
+            // ←←← ВОТ ОНО: освещённый цвет отражённой точки!
+            uchar4 refl_lit = shade(refl_target, refl_normal, trigs[refl_k].color, count_lights, lights);
+            double refl_r = refl_lit.r / 255.0;
+            double refl_g = refl_lit.g / 255.0;
+            double refl_b = refl_lit.b / 255.0;
 
-            // Смешиваем с коэффициентом ks
+            // Смешиваем
             I_r = (1.0 - ks) * I_r + ks * refl_r;
             I_g = (1.0 - ks) * I_g + ks * refl_g;
             I_b = (1.0 - ks) * I_b + ks * refl_b;
-        }
-        // Если не попал — ничего не добавляем (можно добавить фон, но у тебя его нет)
-    }
 
-    // === Clamp to [0, 1] ===
-    I_r = fmax(0.0, fmin(1.0, I_r));
-    I_g = fmax(0.0, fmin(1.0, I_g));
-    I_b = fmax(0.0, fmin(1.0, I_b));
+            // Clamp again after mixing
+            I_r = fmax(0.0, fmin(1.0, I_r));
+            I_g = fmax(0.0, fmin(1.0, I_g));
+            I_b = fmax(0.0, fmin(1.0, I_b));
+        }
+    }
 
     return (uchar4){
         (uchar)(I_r * 255),
