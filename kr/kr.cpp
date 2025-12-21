@@ -347,7 +347,7 @@ int main() {
     build_space();
 
     for (int k = 0; k < 100; ++k) {
-        pc = (vec3) {6. * sin(0.05 * k), 6. * cos(0.05 * k), 0.5 + 2. * sin(0.1 * k)};
+        pc = (vec3) {3.5 * sin(0.05 * k), 3.5 * cos(0.05 * k), 5. + 2. * sin(0.1 * k)};
         pv = (vec3) {3. * sin(0.05 * k + M_PI), 3. * cos(0.5 * k + M_PI), 0.};
         render(pc, pv, w, h, 120, data, count_lights, lights);
 
