@@ -120,14 +120,14 @@ void build_space() {
     trigs[37] = {point_7, point_9, point_11, {0, 0, 255, 0}};
 
 
-    for(int i = 0; i < 38; ++i) {
-        print(trigs[i].a);
-        print(trigs[i].b);
-        print(trigs[i].c);
-        print(trigs[i].a);
-        printf("\n\n\n");
-    }
-    printf("\n\n\n");
+    // for(int i = 0; i < 38; ++i) {
+    //     print(trigs[i].a);
+    //     print(trigs[i].b);
+    //     print(trigs[i].c);
+    //     print(trigs[i].a);
+    //     printf("\n\n\n");
+    // }
+    // printf("\n\n\n");
 }
 
 uchar4 ray(vec3 pos, vec3 dir) {
@@ -169,6 +169,7 @@ void render(vec3 pc, vec3 pv, int w, int h, double angle, uchar4 *data) {
             vec3 v = {-1. + dw * i, (-1. + dh * j) * h / w, z};
             vec3 dir = norm(mult(bx, by, bz, v));
             data[(h - 1 - j) * w + i] = ray(pc, dir);
+            // printf("%d %d %d %d\n", data[(h - 1 - j) * w + i].r, data[(h - 1 - j) * w + i].g, data[(h - 1 - j) * w + i].b, data[(h - 1 - j) * w + i].a);
         }
     }
 }
@@ -194,6 +195,12 @@ int main() {
         fwrite(&h, sizeof(int), 1, out);
         fwrite(data, sizeof(uchar4), w * h, out);
         fclose(out);
+    }
+    for (int i = 0; i < w; ++i) {
+        for (int j = 0; j < h; ++j) {
+            printf("%d%d%d%d ", data[(h - 1 - j) * w + i].r, data[(h - 1 - j) * w + i].g, data[(h - 1 - j) * w + i].b, data[(h - 1 - j) * w + i].a);
+        }
+        printf("\n");
     }
     free(data);
     return 0;
