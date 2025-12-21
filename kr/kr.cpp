@@ -204,7 +204,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     }
 
     // === Reflection (без рекурсии) ===
-    double ks = 1.0;
+    double ks = 0.5;
     if (ks > 0.0) {
         vec3 refl_dir = reflect(dir, normal);  // отражённое направление
         vec3 refl_target, refl_normal;
