@@ -129,8 +129,9 @@ void build_space() {
     trigs[37] = {point_4, point_8, point_0, {0, 0, 255, 0}};
 }
 
-int set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal) {
-    int k, k_min = -1;
+void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, double &ts) {
+    int k;
+    k_min = -1;
     double ts_min;
     for (k = 0; k < 38; ++k) {
         vec3 e1 = diff(trigs[k].b, trigs[k].a);
@@ -153,7 +154,7 @@ int set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal) {
             normal = norm(prod(e1, e2));
         }
     }
-    return k_min;
+    // return k_min;
 }
 
 vec3 reflect(vec3 I, vec3 N) {
@@ -167,7 +168,9 @@ vec3 reflect(vec3 I, vec3 N) {
 
 uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     vec3 pix_pos, normal;
-    int k_min = set_position(pos, dir, pix_pos, normal);
+    int k_min;
+    double ts;
+    set_position(pos, dir, pix_pos, normal, k_min, ts);
 
     if (k_min == -1) {
         return (uchar4){0, 0, 0, 0};
@@ -195,11 +198,14 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     }
 
     // === Reflection (без рекурсии) ===
-    double ks = 0.5;
+    double ks = 1.0;
     if (ks > 0.0) {
         vec3 refl_dir = reflect(dir, normal);  // отражённое направление
         vec3 refl_target, refl_normal;
-        int refl_k = set_position(pix_pos, refl_dir, refl_target, refl_normal);
+        int refl_k;
+        vec3 pix_pos_relf = add(pos, mult(dir, dir, dir, (vec3){ts * 0.99999, ts * 0.99999, ts * 0.99999}));
+        double refl_ts;
+        set_position(pix_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
 
         if (refl_k != -1) {
             // Берём цвет того, что "увидел" отражённый луч
