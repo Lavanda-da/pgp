@@ -152,11 +152,11 @@ void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, d
             ts_min = ts;
             pix_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
             normal = norm(prod(e1, e2));
-            if (dot(dir, normal) > 0) {
-                normal.x = -normal.x;
-                normal.y = -normal.y;
-                normal.z = -normal.z;
-            }
+            // if (dot(dir, normal) > 0) {
+            //     normal.x = -normal.x;
+            //     normal.y = -normal.y;
+            //     normal.z = -normal.z;
+            // }
         }
     }
     // return k_min;
@@ -306,7 +306,7 @@ int main() {
     build_space();
 
     for (int k = 0; k < 100; ++k) {
-        pc = (vec3) {3.5 * sin(0.05 * k), 2. * cos(0.05 * k), 3. + 2. * sin(0.1 * k)};
+        pc = (vec3) {3.5 * sin(0.05 * k), 2. * cos(0.05 * k), 3. + sin(0.1 * k)};
         pv = (vec3) {3. * sin(0.05 * k + M_PI), 3. * cos(0.5 * k + M_PI), 0.};
         render(pc, pv, w, h, 120, data, count_lights, lights);
 
