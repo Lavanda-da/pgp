@@ -153,6 +153,7 @@ uchar4 ray(vec3 pos, vec3 dir) {
         }
     }
     if (k_min == -1) return {0, 0, 0, 0};
+    if (k_min != 0 && k_min != 1) printf("%d\n", k_min);
     return trigs[k_min].color;
 }
 
@@ -182,7 +183,7 @@ int main() {
 
     build_space();
 
-    for (int k = 0; k < 126; ++k) {
+    for (int k = 0; k < 101; ++k) {
         pc = (vec3) {6. * sin(0.05 * k), 6. * cos(0.05 * k), 5. + 2. * sin(0.1 * k)};
         pv = (vec3) {3. * sin(0.05 * k + M_PI), 3. * cos(0.5 * k + M_PI), 0.};
         render(pc, pv, w, h, 120, data);

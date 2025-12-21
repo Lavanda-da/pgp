@@ -2,7 +2,7 @@ from PIL import Image
 import struct
 import ctypes
 
-for i in range(126):
+for i in range(101):
   input_name = str(i) + '.data'
   output_name = str(i) + '.png'
   print(input_name)
@@ -18,6 +18,8 @@ for i in range(126):
     for i in range(w):
       (r, g, b, a) = struct.unpack_from('cccc', buff, offset)
       pix[i, j] = (ord(r), ord(g), ord(b), ord(a))
+      if ord(r) > 100 or ord(g) > 100 or ord(b) > 100 or ord(a) > 100:
+        print(ord(r), ord(g), ord(b), ord(a))
       offset += 4
   print(output_name)
   img.save(output_name)
