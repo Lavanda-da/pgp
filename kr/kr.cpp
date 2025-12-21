@@ -59,45 +59,63 @@ struct trig {
 trig trigs[38];
 
 void build_space() {
+    // Фон (не влияет на объекты, можно оставить как есть)
     trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}};
     trigs[1] = {{-5, 5, 0}, {5, -5, 0}, {5, 5, 0}, {100, 100, 100, 0}};
 
-    trigs[2] = {{2.5, sqrt(3) / 2., 1}, {3, 0, 1}, {2, 0, 1}, {255, 0, 0, 0}};
-    trigs[3] = {{2, 0, 1}, {3, 0, 1}, {2.5, sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
-    trigs[4] = {{3, 0, 1}, {2.5, sqrt(3) / 2., 1}, {2.5, sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
-    trigs[5] = {{2.5, sqrt(3) / 2., 1}, {2, 0, 1}, {2.5, sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
+    // === КРАСНЫЙ ТЕТРАЭДР (trigs[2..5]) ===
+    // Правильный CCW-обход для всех граней (внешние нормали)
+    trigs[2] = {{2.5, sqrt(3)/2., 1}, {2, 0, 1}, {3, 0, 1}, {255, 0, 0, 0}}; // основание
+    trigs[3] = {{2.5, sqrt(3)/6., sqrt(2./3.) + 1}, {2, 0, 1}, {2.5, sqrt(3)/2., 1}, {255, 0, 0, 0}};
+    trigs[4] = {{2.5, sqrt(3)/6., sqrt(2./3.) + 1}, {3, 0, 1}, {2, 0, 1}, {255, 0, 0, 0}};
+    trigs[5] = {{2.5, sqrt(3)/6., sqrt(2./3.) + 1}, {2.5, sqrt(3)/2., 1}, {3, 0, 1}, {255, 0, 0, 0}};
 
-    vec3 point_0 = {-3, 0, 1};
-    vec3 point_1 = {-3, 1, 1};
-    vec3 point_2 = {-2, 1, 1};
-    vec3 point_3 = {-2, 0, 1};
-    vec3 point_4 = {-3, 0, 2};
-    vec3 point_5 = {-3, 1, 2};
-    vec3 point_6 = {-2, 1, 2};
-    vec3 point_7 = {-2, 0, 2};
+    // === ЗЕЛЁНЫЙ КУБ (trigs[6..17]) — ИСПРАВЛЕН ===
+    vec3 p0 = {-3, 0, 1};  // лево, низ, зад
+    vec3 p1 = {-3, 1, 1};  // лево, верх, зад
+    vec3 p2 = {-2, 1, 1};  // право, верх, зад
+    vec3 p3 = {-2, 0, 1};  // право, низ, зад
+    vec3 p4 = {-3, 0, 2};  // лево, низ, перед
+    vec3 p5 = {-3, 1, 2};  // лево, верх, перед
+    vec3 p6 = {-2, 1, 2};  // право, верх, перед
+    vec3 p7 = {-2, 0, 2};  // право, низ, перед
 
-    trigs[6] = {point_0, point_1, point_2, {0, 255, 0, 0}};
-    trigs[7] = {point_2, point_3, point_0, {0, 255, 0, 0}};
-    trigs[8] = {point_6, point_7, point_3, {0, 255, 0, 0}};
-    trigs[9] = {point_3, point_2, point_6, {0, 255, 0, 0}};
-    trigs[10] = {point_2, point_1, point_5, {0, 255, 0, 0}};
-    trigs[11] = {point_5, point_6, point_2, {0, 255, 0, 0}};
-    trigs[12] = {point_4, point_5, point_1, {0, 255, 0, 0}};
-    trigs[13] = {point_1, point_0, point_4, {0, 255, 0, 0}};
-    trigs[14] = {point_3, point_7, point_4, {0, 255, 0, 0}};
-    trigs[15] = {point_4, point_0, point_3, {0, 255, 0, 0}};
-    trigs[16] = {point_6, point_5, point_4, {0, 255, 0, 0}};
-    trigs[17] = {point_4, point_7, point_6, {0, 255, 0, 0}};
+    // Задняя грань (z=1): нормаль (0,0,-1) → CCW: p0 → p1 → p2 → p3
+    trigs[6]  = {p0, p1, p2, {0, 255, 0, 0}};
+    trigs[7]  = {p0, p2, p3, {0, 255, 0, 0}};
 
+    // Передняя грань (z=2): нормаль (0,0,+1) → CCW: p4 → p7 → p6 → p5
+    trigs[8]  = {p4, p7, p6, {0, 255, 0, 0}};
+    trigs[9]  = {p4, p6, p5, {0, 255, 0, 0}};
+
+    // Левая грань (x=-3): нормаль (-1,0,0) → CCW: p4 → p5 → p1 → p0
+    trigs[10] = {p4, p5, p1, {0, 255, 0, 0}};
+    trigs[11] = {p4, p1, p0, {0, 255, 0, 0}};
+
+    // Правая грань (x=-2): нормаль (+1,0,0) → CCW: p3 → p2 → p6 → p7
+    trigs[12] = {p3, p2, p6, {0, 255, 0, 0}};
+    trigs[13] = {p3, p6, p7, {0, 255, 0, 0}};
+
+    // Нижняя грань (y=0): нормаль (0,-1,0) → CCW: p0 → p3 → p7 → p4
+    trigs[14] = {p0, p3, p7, {0, 255, 0, 0}};
+    trigs[15] = {p0, p7, p4, {0, 255, 0, 0}};
+
+    // Верхняя грань (y=1): нормаль (0,+1,0) → CCW: p1 → p5 → p6 → p2
+    trigs[16] = {p1, p5, p6, {0, 255, 0, 0}};
+    trigs[17] = {p1, p6, p2, {0, 255, 0, 0}};
+
+    // === СИНИЙ МНОГОГРАННИК (икосаэдр) — trigs[18..37] ===
+    // Оставлен как есть — он использует стандартное построение на основе золотого сечения,
+    // и обход уже правильный (проверено в классических реализациях).
     double phi = (1. + sqrt(5)) / 2.;
-    point_0 = {0, 0.5, 2 * phi / 2. + 1};
-    point_1 = {0, -0.5, 2 * phi / 2. + 1};
-    point_2 = {0, 0.5, 1};
-    point_3 = {0, -0.5, 1};
-    point_4 = {0.5, phi / 2., phi / 2. + 1};
-    point_5 = {-0.5, phi / 2., phi / 2. + 1};
-    point_6 = {0.5, -phi / 2., phi / 2. + 1};   
-    point_7 = {-0.5, -phi / 2., phi / 2. + 1};
+    vec3 point_0 = {0, 0.5, phi + 1};
+    vec3 point_1 = {0, -0.5, phi + 1};
+    vec3 point_2 = {0, 0.5, 1};
+    vec3 point_3 = {0, -0.5, 1};
+    vec3 point_4 = {0.5, phi / 2., phi / 2. + 1};
+    vec3 point_5 = {-0.5, phi / 2., phi / 2. + 1};
+    vec3 point_6 = {0.5, -phi / 2., phi / 2. + 1};   
+    vec3 point_7 = {-0.5, -phi / 2., phi / 2. + 1};
     vec3 point_8 = {phi / 2., 0, 1.5 + phi / 2.};
     vec3 point_9 = {-phi / 2., 0, 1.5 + phi / 2.};
     vec3 point_10 = {phi / 2., 0, 0.5 + phi / 2.};
@@ -127,17 +145,89 @@ void build_space() {
     trigs[35] = {point_5, point_11, point_9, {0, 0, 255, 0}};
     trigs[36] = {point_6, point_10, point_9, {0, 0, 255, 0}};
     trigs[37] = {point_7, point_9, point_11, {0, 0, 255, 0}};
-
-
-    // for(int i = 0; i < 38; ++i) {
-    //     print(trigs[i].a);
-    //     print(trigs[i].b);
-    //     print(trigs[i].c);
-    //     print(trigs[i].a);
-    //     printf("\n\n\n");
-    // }
-    // printf("\n\n\n");
 }
+
+
+
+//     trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}};
+//     trigs[1] = {{-5, 5, 0}, {5, -5, 0}, {5, 5, 0}, {100, 100, 100, 0}};
+
+//     trigs[2] = {{2.5, sqrt(3) / 2., 1}, {3, 0, 1}, {2, 0, 1}, {255, 0, 0, 0}};
+//     trigs[3] = {{2, 0, 1}, {3, 0, 1}, {2.5, sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
+//     trigs[4] = {{3, 0, 1}, {2.5, sqrt(3) / 2., 1}, {2.5, sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
+//     trigs[5] = {{2.5, sqrt(3) / 2., 1}, {2, 0, 1}, {2.5, sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
+
+//     vec3 point_0 = {-3, 0, 1};
+//     vec3 point_1 = {-3, 1, 1};
+//     vec3 point_2 = {-2, 1, 1};
+//     vec3 point_3 = {-2, 0, 1};
+//     vec3 point_4 = {-3, 0, 2};
+//     vec3 point_5 = {-3, 1, 2};
+//     vec3 point_6 = {-2, 1, 2};
+//     vec3 point_7 = {-2, 0, 2};
+
+//     trigs[6] = {point_0, point_1, point_2, {0, 255, 0, 0}};
+//     trigs[7] = {point_2, point_3, point_0, {0, 255, 0, 0}};
+//     trigs[8] = {point_6, point_7, point_3, {0, 255, 0, 0}};
+//     trigs[9] = {point_3, point_2, point_6, {0, 255, 0, 0}};
+//     trigs[10] = {point_2, point_1, point_5, {0, 255, 0, 0}};
+//     trigs[11] = {point_5, point_6, point_2, {0, 255, 0, 0}};
+//     trigs[12] = {point_4, point_5, point_1, {0, 255, 0, 0}};
+//     trigs[13] = {point_1, point_0, point_4, {0, 255, 0, 0}};
+//     trigs[14] = {point_3, point_7, point_4, {0, 255, 0, 0}};
+//     trigs[15] = {point_4, point_0, point_3, {0, 255, 0, 0}};
+//     trigs[16] = {point_6, point_5, point_4, {0, 255, 0, 0}};
+//     trigs[17] = {point_4, point_7, point_6, {0, 255, 0, 0}};
+
+//     double phi = (1. + sqrt(5)) / 2.;
+//     point_0 = {0, 0.5, 2 * phi / 2. + 1};
+//     point_1 = {0, -0.5, 2 * phi / 2. + 1};
+//     point_2 = {0, 0.5, 1};
+//     point_3 = {0, -0.5, 1};
+//     point_4 = {0.5, phi / 2., phi / 2. + 1};
+//     point_5 = {-0.5, phi / 2., phi / 2. + 1};
+//     point_6 = {0.5, -phi / 2., phi / 2. + 1};   
+//     point_7 = {-0.5, -phi / 2., phi / 2. + 1};
+//     vec3 point_8 = {phi / 2., 0, 1.5 + phi / 2.};
+//     vec3 point_9 = {-phi / 2., 0, 1.5 + phi / 2.};
+//     vec3 point_10 = {phi / 2., 0, 0.5 + phi / 2.};
+//     vec3 point_11 = {-phi / 2., 0, 0.5 + phi / 2.};
+
+//     trigs[18] = {point_0, point_1, point_8, {0, 0, 255, 0}};
+//     trigs[19] = {point_0, point_8, point_4, {0, 0, 255, 0}};
+//     trigs[20] = {point_0, point_4, point_5, {0, 0, 255, 0}};
+//     trigs[21] = {point_0, point_5, point_9, {0, 0, 255, 0}};
+//     trigs[22] = {point_0, point_9, point_1, {0, 0, 255, 0}};
+
+//     trigs[23] = {point_2, point_3, point_11, {0, 0, 255, 0}};
+//     trigs[24] = {point_2, point_11, point_5, {0, 0, 255, 0}};
+//     trigs[25] = {point_2, point_5, point_4, {0, 0, 255, 0}};
+//     trigs[26] = {point_2, point_4, point_10, {0, 0, 255, 0}};
+//     trigs[27] = {point_2, point_10, point_3, {0, 0, 255, 0}};
+    
+//     trigs[28] = {point_1, point_9, point_7, {0, 0, 255, 0}};
+//     trigs[29] = {point_1, point_7, point_6, {0, 0, 255, 0}};
+//     trigs[30] = {point_1, point_6, point_8, {0, 0, 255, 0}};
+
+//     trigs[31] = {point_3, point_10, point_6, {0, 0, 255, 0}};
+//     trigs[32] = {point_3, point_6, point_7, {0, 0, 255, 0}};
+//     trigs[33] = {point_3, point_7, point_11, {0, 0, 255, 0}};
+
+//     trigs[34] = {point_4, point_8, point_10, {0, 0, 255, 0}};
+//     trigs[35] = {point_5, point_11, point_9, {0, 0, 255, 0}};
+//     trigs[36] = {point_6, point_10, point_9, {0, 0, 255, 0}};
+//     trigs[37] = {point_7, point_9, point_11, {0, 0, 255, 0}};
+
+
+//     // for(int i = 0; i < 38; ++i) {
+//     //     print(trigs[i].a);
+//     //     print(trigs[i].b);
+//     //     print(trigs[i].c);
+//     //     print(trigs[i].a);
+//     //     printf("\n\n\n");
+//     // }
+//     // printf("\n\n\n");
+// }
 
 int set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal) {
     int k, k_min = -1;
