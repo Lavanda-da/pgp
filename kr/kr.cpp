@@ -60,35 +60,44 @@ trig trigs[38];
 
 void build_space() {
     trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}};
-    trigs[1] = {{5, 5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}};
+    trigs[1] = {{-5, 5, 0}, {5, -5, 0}, {5, 5, 0}, {100, 100, 100, 0}};
 
-    trigs[2] = {{2, 0, 1}, {3, 0, 1}, {5. / 2., sqrt(3) / 2., 1}, {255, 0, 0, 0}};
-    trigs[3] = {{3, 0, 1}, {5. / 2., sqrt(3) / 2., 1}, {5. / 2., sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
-    trigs[4] = {{5. / 2., sqrt(3) / 2., 1}, {5. / 2., sqrt(3) / 6., sqrt(2. / 3.) + 1}, {2, 0, 1}, {255, 0, 0, 0}};
-    trigs[5] = {{5. / 2., sqrt(3) / 6., sqrt(2. / 3.) + 1}, {2, 0, 1}, {3, 0, 1}, {255, 0, 0, 0}};
+    trigs[2] = {{2.5, sqrt(3) / 2., 1}, {3, 0, 1}, {2, 0, 1}, {255, 0, 0, 0}};
+    trigs[3] = {{2, 0, 1}, {3, 0, 1}, {2.5, sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
+    trigs[4] = {{3, 0, 1}, {2.5, sqrt(3) / 2., 1}, {2.5, sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
+    trigs[5] = {{2.5, sqrt(3) / 2., 1}, {2, 0, 1}, {2.5, sqrt(3) / 6., sqrt(2. / 3.) + 1}, {255, 0, 0, 0}};
 
-    trigs[6] = {{-3, 0, 1}, {-2, 0, 1}, {-2, 1, 1}, {0, 255, 0, 0}};
-    trigs[7] = {{-3, 0, 1}, {-2, 1, 1}, {-3, 1, 1}, {0, 255, 0, 0}};
-    trigs[8] = {{-3, 0, 2}, {-2, 0, 2}, {-2, 1, 2}, {0, 255, 0, 0}};
-    trigs[9] = {{-3, 0, 2}, {-3, 1, 2}, {-2, 1, 2}, {0, 255, 0, 0}};
-    trigs[10] = {{-3, 0, 1}, {-2, 0, 2}, {-2, 0, 1}, {0, 255, 0, 0}};
-    trigs[11] = {{-3, 0, 1}, {-2, 0, 2}, {-3, 0, 2}, {0, 255, 0, 0}};
-    trigs[12] = {{-3, 1, 1}, {-3, 1, 2}, {-2, 1, 2}, {0, 255, 0, 0}};
-    trigs[13] = {{-3, 1, 1}, {-2, 1, 1}, {-2, 1, 2}, {0, 255, 0, 0}};
-    trigs[14] = {{-3, 0, 1}, {-3, 1, 1}, {-3, 1, 2}, {0, 255, 0, 0}};
-    trigs[15] = {{-3, 0, 1}, {-3, 0, 2}, {-3, 1, 2}, {0, 255, 0, 0}};
-    trigs[16] = {{-2, 0, 1}, {-2, 0, 2}, {-2, 1, 2}, {0, 255, 0, 0}};
-    trigs[17] = {{-2, 0, 1}, {-2, 1, 1}, {-2, 1, 2}, {0, 255, 0, 0}};
+    vec3 point_0 = {-3, 0, 1};
+    vec3 point_1 = {-3, 1, 1};
+    vec3 point_2 = {-2, 1, 1};
+    vec3 point_3 = {-2, 0, 1};
+    vec3 point_4 = {-3, 0, 2};
+    vec3 point_5 = {-3, 1, 2};
+    vec3 point_6 = {-2, 1, 2};
+    vec3 point_7 = {-2, 0, 2};
+
+    trigs[6] = {point_0, point_1, point_2, {0, 255, 0, 0}};
+    trigs[7] = {point_2, point_3, point_0, {0, 255, 0, 0}};
+    trigs[8] = {point_6, point_7, point_3, {0, 255, 0, 0}};
+    trigs[9] = {point_3, point_2, point_6, {0, 255, 0, 0}};
+    trigs[10] = {point_2, point_1, point_5, {0, 255, 0, 0}};
+    trigs[11] = {point_5, point_6, point_2, {0, 255, 0, 0}};
+    trigs[12] = {point_4, point_5, point_1, {0, 255, 0, 0}};
+    trigs[13] = {point_1, point_0, point_4, {0, 255, 0, 0}};
+    trigs[14] = {point_3, point_7, point_4, {0, 255, 0, 0}};
+    trigs[15] = {point_4, point_0, point_3, {0, 255, 0, 0}};
+    trigs[16] = {point_6, point_5, point_4, {0, 255, 0, 0}};
+    trigs[17] = {point_4, point_7, point_6, {0, 255, 0, 0}};
 
     double phi = (1. + sqrt(5)) / 2.;
-    vec3 point_0 = {0, 0.5, 2 * phi / 2. + 1};
-    vec3 point_1 = {0, -0.5, 2 * phi / 2. + 1};
-    vec3 point_2 = {0, 0.5, 1};
-    vec3 point_3 = {0, -0.5, 1};
-    vec3 point_4 = {0.5, phi / 2., phi / 2. + 1};
-    vec3 point_5 = {-0.5, phi / 2., phi / 2. + 1};
-    vec3 point_6 = {0.5, -phi / 2., phi / 2. + 1};   
-    vec3 point_7 = {-0.5, -phi / 2., phi / 2. + 1};
+    point_0 = {0, 0.5, 2 * phi / 2. + 1};
+    point_1 = {0, -0.5, 2 * phi / 2. + 1};
+    point_2 = {0, 0.5, 1};
+    point_3 = {0, -0.5, 1};
+    point_4 = {0.5, phi / 2., phi / 2. + 1};
+    point_5 = {-0.5, phi / 2., phi / 2. + 1};
+    point_6 = {0.5, -phi / 2., phi / 2. + 1};   
+    point_7 = {-0.5, -phi / 2., phi / 2. + 1};
     vec3 point_8 = {phi / 2., 0, 1.5 + phi / 2.};
     vec3 point_9 = {-phi / 2., 0, 1.5 + phi / 2.};
     vec3 point_10 = {phi / 2., 0, 0.5 + phi / 2.};
@@ -130,7 +139,7 @@ void build_space() {
     // printf("\n\n\n");
 }
 
-uchar4 ray(vec3 pos, vec3 dir) {
+int set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal) {
     int k, k_min = -1;
     double ts_min;
     for (k = 0; k < 38; ++k) {
@@ -150,14 +159,73 @@ uchar4 ray(vec3 pos, vec3 dir) {
         if (k_min == -1 || ts < ts_min) {
             k_min = k;
             ts_min = ts;
+            pix_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
+            normal = norm(prod(e1, e2));
         }
     }
-    if (k_min == -1) return {0, 0, 0, 0};
-    if (k_min != 0 && k_min != 1) printf("%d\n", k_min);
-    return trigs[k_min].color;
+    return k_min;
 }
 
-void render(vec3 pc, vec3 pv, int w, int h, double angle, uchar4 *data) {
+uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
+    vec3 pix_pos, normal;
+    
+    int k_min = set_position(pos, dir, pix_pos, normal);
+    uchar4 pix_color;
+    if (k_min == -1) pix_color = {0, 0, 0, 0};
+    else pix_color = trigs[k_min].color;
+
+    return pix_color;
+
+    // // Базовый цвет треугольника (как float от 0 до 1)
+    // double kd_r = pix_color.r / 255.0;
+    // double kd_g = pix_color.g / 255.0;
+    // double kd_b = pix_color.b / 255.0;
+    // double ka_r = kd_r * 0.1; // ambient = 10% от диффузного
+    // double ka_g = kd_g * 0.1;
+    // double ka_b = kd_b * 0.1;
+    // double ks_r = 1.0; // белый зеркальный блик
+    // double ks_g = 1.0;
+    // double ks_b = 1.0;
+    // double shininess = 32.0;
+
+    // double I_r = ka_r * 0.2;
+    // double I_g = ka_g * 0.2;
+    // double I_b = ka_b * 0.2;
+
+    // vec3 view_dir = norm(diff(pos, pix_pos));
+
+    // for (int i = 0; i < count_lights; ++i) {
+    //     vec3 light_dir = norm(diff(lights[i], pix_pos));
+
+    //     // // Пускаем луч от pix_pos в направлении light_dir
+    //     // vec3 shadow_pos, shadow_normal;
+    //     // int shadow_hit = set_position(lights[i], norm(diff(pix_pos, lights[i])), shadow_pos, shadow_normal);
+    //     // if (shadow_hit != -1 && shadow_hit != k_min) return {0, 0, 0, 0};
+    //     double NdotL = dot(normal, light_dir);
+    //     if (NdotL < 0) NdotL = 0;
+
+    //     I_r += kd_r * NdotL;
+    //     I_g += kd_g * NdotL;
+    //     I_b += kd_b * NdotL;
+    // }
+
+    // // Ограничение [0, 1]
+    // if (I_r > 1.0) I_r = 1.0;
+    // if (I_g > 1.0) I_g = 1.0;
+    // if (I_b > 1.0) I_b = 1.0;
+    // if (I_r < 0.0) I_r = 0.0;
+    // if (I_g < 0.0) I_g = 0.0;
+    // if (I_b < 0.0) I_b = 0.0;
+
+    // return (uchar4){
+    //     (uchar)(I_r * 255),
+    //     (uchar)(I_g * 255),
+    //     (uchar)(I_b * 255),
+    //     0
+    // };
+}
+
+void render(vec3 pc, vec3 pv, int w, int h, double angle, uchar4 *data, int count_lights, vec3 *lights) {
     double dw = 2. / (w - 1);
     double dh = 2. / (h - 1);
     double z = 1. / tan(angle * M_PI / 360.);
@@ -169,26 +237,33 @@ void render(vec3 pc, vec3 pv, int w, int h, double angle, uchar4 *data) {
         for (int j = 0; j < h; ++j) {
             vec3 v = {-1. + dw * i, (-1. + dh * j) * h / w, z};
             vec3 dir = norm(mult(bx, by, bz, v));
-            data[(h - 1 - j) * w + i] = ray(pc, dir);
+            data[(h - 1 - j) * w + i] = ray(pc, dir, count_lights, lights);
             // printf("%d %d %d %d\n", data[(h - 1 - j) * w + i].r, data[(h - 1 - j) * w + i].g, data[(h - 1 - j) * w + i].b, data[(h - 1 - j) * w + i].a);
         }
     }
 }
 
+vec3 lights[1];
+
 int main() {
     int w = 640, h = 480;
+    int count_lights = 1;
     char buff[256];
     uchar4 *data = (uchar4*)malloc(sizeof(uchar4) * w * h);
+    vec3 *lights = (vec3*)malloc(sizeof(vec3) * count_lights);
+    for (int i = 0; i < count_lights; ++i) {
+        lights[i] = {0, 0, 5};
+    }
     vec3 pc, pv;
 
     build_space();
 
-    for (int k = 0; k < 101; ++k) {
+    for (int k = 0; k < 100; ++k) {
         pc = (vec3) {6. * sin(0.05 * k), 6. * cos(0.05 * k), 5. + 2. * sin(0.1 * k)};
         pv = (vec3) {3. * sin(0.05 * k + M_PI), 3. * cos(0.5 * k + M_PI), 0.};
-        render(pc, pv, w, h, 120, data);
+        render(pc, pv, w, h, 120, data, count_lights, lights);
 
-        sprintf(buff, "%d.data", k);
+        sprintf(buff, "res/%d.data", k);
         printf("%d: %s\n", k, buff);
 
         FILE *out = fopen(buff, "wb");
@@ -197,12 +272,12 @@ int main() {
         fwrite(data, sizeof(uchar4), w * h, out);
         fclose(out);
     }
-    for (int i = 0; i < w; ++i) {
-        for (int j = 0; j < h; ++j) {
-            printf("%d%d%d%d ", data[(h - 1 - j) * w + i].r, data[(h - 1 - j) * w + i].g, data[(h - 1 - j) * w + i].b, data[(h - 1 - j) * w + i].a);
-        }
-        printf("\n");
-    }
+    // for (int i = 0; i < w; ++i) {
+    //     for (int j = 0; j < h; ++j) {
+    //         printf("%d%d%d%d ", data[(h - 1 - j) * w + i].r, data[(h - 1 - j) * w + i].g, data[(h - 1 - j) * w + i].b, data[(h - 1 - j) * w + i].a);
+    //     }
+    //     printf("\n");
+    // }
     free(data);
     return 0;
 }
