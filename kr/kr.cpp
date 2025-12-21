@@ -264,9 +264,9 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     if (k_min == -1) return {0, 0, 0, 0};
     else pix_color = trigs[k_min].color;
 
-    pix_color.r /= 255;
-    pix_color.g /= 255;
-    pix_color.b /= 255;
+    pix_color.r /= 255.;
+    pix_color.g /= 255.;
+    pix_color.b /= 255.;
 
     pix_color.r *= 0.2;
     pix_color.g *= 0.2;
@@ -287,9 +287,9 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     if (pix_color.g > 1.) pix_color.g = 1.;
     if (pix_color.b > 1.) pix_color.b = 1.;
 
-    pix_color.r *= 255;
-    pix_color.g *= 255;
-    pix_color.b *= 255;
+    pix_color.r *= 255.;
+    pix_color.g *= 255.;
+    pix_color.b *= 255.;
 
     return pix_color;
     // // Базовый цвет треугольника (как float от 0 до 1)
