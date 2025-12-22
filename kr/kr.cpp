@@ -4,12 +4,12 @@
 
 typedef unsigned char uchar;
 
-struct uchar4 {
-    uchar r = 0;
-    uchar g = 0;
-    uchar b = 0;
-    uchar a = 0;
-};
+// struct uchar4 {
+//     uchar r = 0;
+//     uchar g = 0;
+//     uchar b = 0;
+//     uchar a = 0;
+// };
 
 struct vec3 {
     double x;
@@ -133,10 +133,10 @@ void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_
 
 void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, double &ts_min) {
     k_min = -1;
-    ts_min = 1e300; // большое число
+    ts_min = 1e300; 
 
     for (int k = 0; k < 38; ++k) {
-                vec3 e1 = diff(trigs[k].b, trigs[k].a);
+        vec3 e1 = diff(trigs[k].b, trigs[k].a);
         vec3 e2 = diff(trigs[k].c, trigs[k].a);
         vec3 p = prod(dir, e2);
         double div = dot(p, e1);
@@ -151,14 +151,13 @@ void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, d
         if (v < 0. || u + v > 1.) continue;
 
         double ts = dot(q, e2) / div;
-        if (ts < 1e-6) continue; // ←←← минимальное расстояние (защита от self-intersection)
+        if (ts < 1e-6) continue; 
 
         if (k_min == -1 || ts < ts_min) {
             k_min = k;
             ts_min = ts;
             pix_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
             normal = norm(prod(e1, e2));
-            // Исправляем ориентацию нормали
             if (dot(dir, normal) > 0) {
                 normal.x = -normal.x; 
                 normal.y = -normal.y; 
@@ -177,11 +176,10 @@ vec3 reflect(vec3 I, vec3 N) {
     };
 }
 
-// Вычисляет освещённый цвет точки (без отражения/преломления!)
 uchar4 shade(vec3 point, vec3 normal, uchar4 base_color, int count_lights, vec3 *lights) {
-    double kd_r = base_color.r / 255.0;
-    double kd_g = base_color.g / 255.0;
-    double kd_b = base_color.b / 255.0;
+    double kd_r = base_color.x / 255.0;
+    double kd_g = base_color.y / 255.0;
+    double kd_b = base_color.z / 255.0;
 
     // Ambient
     double I_r = kd_r * 0.1;
@@ -198,7 +196,6 @@ uchar4 shade(vec3 point, vec3 normal, uchar4 base_color, int count_lights, vec3 
         I_b += kd_b * NdotL;
     }
 
-    // Clamp
     I_r = fmax(0.0, fmin(1.0, I_r));
     I_g = fmax(0.0, fmin(1.0, I_g));
     I_b = fmax(0.0, fmin(1.0, I_b));
@@ -221,18 +218,15 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         return (uchar4){0, 0, 0, 0};
     }
 
-    // Основной цвет с освещением
     uchar4 base_lit = shade(pix_pos, normal, trigs[k_min].color, count_lights, lights);
-    double I_r = base_lit.r / 255.0;
-    double I_g = base_lit.g / 255.0;
-    double I_b = base_lit.b / 255.0;
+    double I_r = base_lit.x / 255.0;
+    double I_g = base_lit.y / 255.0;
+    double I_b = base_lit.z / 255.0;
 
-    // === Отражение (один уровень) ===
     double ks = trigs[k_min].k_refl;
     if (ks > 0.0) {
         vec3 refl_dir = reflect(dir, normal);
 
-        // Сдвигаем точку, чтобы избежать self-intersection
         double eps = 1e-5;
         vec3 offset_pos = add(pos, mult(dir, dir, dir, (vec3){ts * eps, ts * eps, ts * eps}));
 
@@ -242,18 +236,15 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         set_position(offset_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
 
         if (refl_k != -1) {
-            // ←←← ВОТ ОНО: освещённый цвет отражённой точки!
             uchar4 refl_lit = shade(refl_target, refl_normal, trigs[refl_k].color, count_lights, lights);
-            double refl_r = refl_lit.r / 255.0;
-            double refl_g = refl_lit.g / 255.0;
-            double refl_b = refl_lit.b / 255.0;
+            double refl_r = refl_lit.x / 255.0;
+            double refl_g = refl_lit.y / 255.0;
+            double refl_b = refl_lit.z / 255.0;
 
-            // Смешиваем
             I_r = (1.0 - ks) * I_r + ks * refl_r;
             I_g = (1.0 - ks) * I_g + ks * refl_g;
             I_b = (1.0 - ks) * I_b + ks * refl_b;
 
-            // Clamp again after mixing
             I_r = fmax(0.0, fmin(1.0, I_r));
             I_g = fmax(0.0, fmin(1.0, I_g));
             I_b = fmax(0.0, fmin(1.0, I_b));
@@ -281,7 +272,6 @@ void render(vec3 pc, vec3 pv, int w, int h, double angle, uchar4 *data, int coun
             vec3 v = {-1. + dw * i, (-1. + dh * j) * h / w, z};
             vec3 dir = norm(mult(bx, by, bz, v));
             data[(h - 1 - j) * w + i] = ray(pc, dir, count_lights, lights);
-            // printf("%d %d %d %d\n", data[(h - 1 - j) * w + i].r, data[(h - 1 - j) * w + i].g, data[(h - 1 - j) * w + i].b, data[(h - 1 - j) * w + i].a);
         }
     }
 }
@@ -343,12 +333,6 @@ int main() {
         fwrite(data, sizeof(uchar4), w * h, out);
         fclose(out);
     }
-    // for (int i = 0; i < w; ++i) {
-    //     for (int j = 0; j < h; ++j) {
-    //         printf("%d%d%d%d ", data[(h - 1 - j) * w + i].r, data[(h - 1 - j) * w + i].g, data[(h - 1 - j) * w + i].b, data[(h - 1 - j) * w + i].a);
-    //     }
-    //     printf("\n");
-    // }
     free(data);
     return 0;
 }
