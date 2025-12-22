@@ -58,28 +58,28 @@ struct trig {
 
 trig trigs[38];
 
-void build_space() {
+void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_r, double iko_r) {
     trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}};
     trigs[1] = {{-5, 5, 0}, {5, -5, 0}, {5, 5, 0}, {100, 100, 100, 0}};
 
-    vec3 point_0 = {0.5 * (-1.632990) + 2, 0.5 * (-0.942809), 0.5 * (-0.666667) + 2};
-    vec3 point_1 = {0. + 2, 0.5 * 1.885620, 0.5 * (-0.666667) + 2};
-    vec3 point_2 = {0.5 * 1.632990 + 2, 0.5 * (-0.942809), 0.5 * (-0.666667) + 2};
-    vec3 point_3 = {0.000000 + 2, 0.000000, 0.5 * 2.000000 + 2};
+    vec3 point_0 = {tetr_r * (-1.632990) + tetr_c.x, tetr_r * (-0.942809) + tetr_c.y, tetr_r * (-0.666667) + tetr_c.z};
+    vec3 point_1 = {tetr_r * 0. + tetr_c.x, tetr_r * 1.885620 + tetr_c.y, tetr_r * (-0.666667) + tetr_c.z};
+    vec3 point_2 = {tetr_r * 1.632990 + tetr_c.x, tetr_r * (-0.942809) + tetr_c.y, tetr_r * (-0.666667) + tetr_c.z};
+    vec3 point_3 = {tetr_r * 0. + tetr_c.x, tetr_r * 0. + tetr_c.y, tetr_r * 2. + tetr_c.z};
 
     trigs[2] = {point_0, point_1, point_2, {255, 0, 0, 0}};
     trigs[3] = {point_0, point_3, point_1, {255, 0, 0, 0}};
     trigs[4] = {point_1, point_3, point_2, {255, 0, 0, 0}};
     trigs[5] = {point_2, point_3, point_0, {255, 0, 0, 0}};
 
-    vec3 p0 = {-3, 0, 1};
-    vec3 p1 = {-3, 1, 1};
-    vec3 p2 = {-2, 1, 1};
-    vec3 p3 = {-2, 0, 1};
-    vec3 p4 = {-3, 0, 2};
-    vec3 p5 = {-3, 1, 2};
-    vec3 p6 = {-2, 1, 2};
-    vec3 p7 = {-2, 0, 2};
+    vec3 p0 = {hex_c.x - 0.5 * hex_r, hex_c.y - 0.5 * hex_r, hex_c.z - 0.5 * hex_r};
+    vec3 p1 = {hex_c.x - 0.5 * hex_r, hex_c.y + 0.5 * hex_r, hex_c.z - 0.5 * hex_r};
+    vec3 p2 = {hex_c.x + 0.5 * hex_r, hex_c.y + 0.5 * hex_r, hex_c.z - 0.5 * hex_r};
+    vec3 p3 = {hex_c.x + 0.5 * hex_r, hex_c.y - 0.5 * hex_r, hex_c.z - 0.5 * hex_r};
+    vec3 p4 = {hex_c.x - 0.5 * hex_r, hex_c.y - 0.5 * hex_r, hex_c.z + 0.5 * hex_r};
+    vec3 p5 = {hex_c.x - 0.5 * hex_r, hex_c.y + 0.5 * hex_r, hex_c.z + 0.5 * hex_r};
+    vec3 p6 = {hex_c.x + 0.5 * hex_r, hex_c.y + 0.5 * hex_r, hex_c.z + 0.5 * hex_r};
+    vec3 p7 = {hex_c.x + 0.5 * hex_r, hex_c.y - 0.5 * hex_r, hex_c.z + 0.5 * hex_r};
 
     trigs[6]  = {p0, p1, p2, {0, 255, 0, 0}};
     trigs[7]  = {p0, p2, p3, {0, 255, 0, 0}};
@@ -94,18 +94,18 @@ void build_space() {
     trigs[16] = {p1, p5, p6, {0, 255, 0, 0}};
     trigs[17] = {p1, p6, p2, {0, 255, 0, 0}};
 
-    point_0 = {0., -0.525731, 0.850651 + 2};
-    point_1 = {0.850651, 0., 0.525731 + 2};
-    point_2 = {0.850651, 0., -0.525731 + 2};
-    point_3 = {-0.850651, 0., -0.525731 + 2};
-    vec3 point_4 = {-0.850651, 0., 0.525731 + 2};
-    vec3 point_5 = {-0.525731, 0.850651, 0. + 2};
-    vec3 point_6 = {0.525731, 0.850651, 0. + 2};
-    vec3 point_7 = {0.525731, -0.850651, 0. + 2};
-    vec3 point_8 = {-0.525731, -0.850651, 0. + 2};
-    vec3 point_9 = {0., -0.525731, -0.850651 + 2};
-    vec3 point_10 = {0., 0.525731, -0.850651 + 2};
-    vec3 point_11 = {0., 0.525731, 0.850651 + 2};
+    point_0 = {0. * iko_r + iko_c.x, -0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z};
+    point_1 = {0.850651 * iko_r + iko_c.x, 0. * iko_r + iko_c.y, 0.525731 * iko_r + iko_c.z};
+    point_2 = {0.850651 * iko_r + iko_c.x, 0. * iko_r + iko_c.y, -0.525731 * iko_r + iko_c.z};
+    point_3 = {-0.850651 * iko_r + iko_c.x, 0. * iko_r + iko_c.y, -0.525731 * iko_r + iko_c.z};
+    vec3 point_4 = {-0.850651 * iko_r + iko_c.x, 0. * iko_r + iko_c.y, 0.525731 * iko_r + iko_c.z};
+    vec3 point_5 = {-0.525731 * iko_r + iko_c.x, 0.850651 * iko_r + iko_c.y, 0. * iko_r + iko_c.z};
+    vec3 point_6 = {0.525731 * iko_r + iko_c.x, 0.850651 * iko_r + iko_c.y, 0. * iko_r + iko_c.z};
+    vec3 point_7 = {0.525731 * iko_r + iko_c.x, -0.850651 * iko_r + iko_c.y, 0. * iko_r + iko_c.z};
+    vec3 point_8 = {-0.525731 * iko_r + iko_c.x, -0.850651 * iko_r + iko_c.y, 0. * iko_r + iko_c.z};
+    vec3 point_9 = {0. * iko_r + iko_c.x, -0.525731 * iko_r + iko_c.y, -0.850651 * iko_r + iko_c.z};
+    vec3 point_10 = {0. * iko_r + iko_c.x, 0.525731 * iko_r + iko_c.y, -0.850651 * iko_r + iko_c.z};
+    vec3 point_11 = {0. * iko_r + iko_c.x, 0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z};
 
     trigs[18] = {point_1, point_2, point_6, {0, 0, 255, 0}};
     trigs[19] = {point_1, point_7, point_2, {0, 0, 255, 0}};
@@ -287,30 +287,35 @@ void render(vec3 pc, vec3 pv, int w, int h, double angle, uchar4 *data, int coun
 vec3 lights[1];
 
 int main() {
-    // int frames;
-    // scanf("%d", &frames);
+    int frames;
+    scanf("%d", &frames);
 
-    // double tetr_c, tetr_r, hex_c, hex_r, iko_c, iko_r;
-    // scanf("%lf %lf %lf %lf %lf %lf", tetr_c, tetr_r, hex_c, hex_r, iko_c, iko_r);
+    char buff[256];
+    scanf("%s", buff);
+    vec3 tetr_c, hex_c, iko_c;
+    double tetr_r, hex_r, iko_r;
+    scanf("%lf %lf %lf %lf", &tetr_c.x, &tetr_c.y, &tetr_c.z, &tetr_r);
+    scanf("%lf %lf %lf %lf", &hex_c.x, &hex_c.y, &hex_c.z, &hex_r);
+    scanf("%lf %lf %lf %lf", &iko_c.x, &iko_c.y, &iko_c.z, &iko_r);
 
     int w = 640, h = 480;
     int count_lights = 1;
-    char buff[256];
     uchar4 *data = (uchar4*)malloc(sizeof(uchar4) * w * h);
     vec3 *lights = (vec3*)malloc(sizeof(vec3) * count_lights);
     for (int i = 0; i < count_lights; ++i) {
         lights[i] = {0, 0, 5};
     }
+    
     vec3 pc, pv;
 
-    build_space();
+    build_space(tetr_c, hex_c, iko_c, tetr_r, hex_r, iko_r);
 
-    for (int k = 0; k < 100; ++k) {
+    for (int k = 0; k < frames; ++k) {
         pc = (vec3) {3. * sin(0.05 * k), 1.5 * cos(0.05 * k), 3. + sin(0.1 * k)};
-        pv = (vec3) {sin(0.05 * k + M_PI), cos(0.5 * k + M_PI), 1.};
+        pv = (vec3) {0.5 + sin(0.05 * k + M_PI), 0.5 + cos(0.5 * k + M_PI), 1.};
         render(pc, pv, w, h, 120, data, count_lights, lights);
 
-        sprintf(buff, "res/%d.data", k);
+        // sprintf(buff, "res/%d.data", k);
         printf("%d: %s\n", k, buff);
 
         FILE *out = fopen(buff, "wb");
