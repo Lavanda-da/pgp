@@ -332,7 +332,7 @@ int main() {
         sprintf(buff2, buff, k);
         printf("%d: %s\n", k, buff2);
 
-        FILE *out = fopen(buff, "wb");
+        FILE *out = fopen(buff2, "wb");
         fwrite(&w, sizeof(int), 1, out);
         fwrite(&h, sizeof(int), 1, out);
         fwrite(data, sizeof(uchar4), w * h, out);
