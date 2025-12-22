@@ -211,32 +211,6 @@ uchar4 shade(vec3 point, vec3 normal, uchar4 base_color, int count_lights, vec3 
     };
 }
 
-// Возвращает true, если преломление возможно (нет полного внутреннего отражения)
-bool refract(vec3 I, vec3 N, double eta, vec3 *T) {
-    double dotIN = dot(I, N);
-    // Убедимся, что N — внешняя нормаль. I — направление к поверхности (как в reflect)
-    // Если луч выходит из материала, eta нужно инвертировать
-    bool entering = dotIN < 0;
-    vec3 n = entering ? N : (vec3){-N.x, -N.y, -N.z};
-    double eta_i = entering ? 1.0 : eta;
-    double eta_t = entering ? eta : 1.0;
-    double n_dot_i = entering ? -dotIN : dotIN;
-
-    double sin_t2 = (eta_i * eta_i / (eta_t * eta_t)) * (1.0 - n_dot_i * n_dot_i);
-    if (sin_t2 >= 1.0) {
-        // Полное внутреннее отражение
-        return false;
-    }
-    double cos_t2 = sqrt(1.0 - sin_t2);
-    double cos_ti = eta_i * n_dot_i - eta_t * cos_t2;
-    *T = (vec3){
-        (eta_i / eta_t) * I.x - (eta_i * n_dot_i - eta_t * cos_t2) * n.x,
-        (eta_i / eta_t) * I.y - (eta_i * n_dot_i - eta_t * cos_t2) * n.y,
-        (eta_i / eta_t) * I.z - (eta_i * n_dot_i - eta_t * cos_t2) * n.z
-    };
-    return true;
-}
-
 uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     vec3 pix_pos, normal;
     int k_min;
@@ -247,80 +221,44 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         return (uchar4){0, 0, 0, 0};
     }
 
+    // Основной цвет с освещением
     uchar4 base_lit = shade(pix_pos, normal, trigs[k_min].color, count_lights, lights);
     double I_r = base_lit.r / 255.0;
     double I_g = base_lit.g / 255.0;
     double I_b = base_lit.b / 255.0;
 
+    // === Отражение (один уровень) ===
     double ks = trigs[k_min].k_refl;
-    double kt = trigs[k_min].k_refr;
-
-    // Суммарный "энергетический бюджет" не должен превышать 1
-    double total = ks + kt;
-    if (total > 1.0) {
-        // Нормализуем, чтобы не было перенасыщения
-        ks /= total;
-        kt /= total;
-        total = 1.0;
-    }
-
-    double remain = 1.0 - total; // часть, переданная диффузному
-
-    // Обновляем цвет с учётом того, что не вся энергия ушла в зеркальные компоненты
-    I_r *= remain;
-    I_g *= remain;
-    I_b *= remain;
-
-    // === Отражение ===
     if (ks > 0.0) {
         vec3 refl_dir = reflect(dir, normal);
+
+        // Сдвигаем точку, чтобы избежать self-intersection
         double eps = 1e-5;
-        vec3 offset_pos = add(pos, mult(dir, dir, dir, (vec3){ts + eps, ts + eps, ts + eps}));
+        vec3 offset_pos = add(pos, mult(dir, dir, dir, (vec3){ts * eps, ts * eps, ts * eps}));
+
         vec3 refl_target, refl_normal;
         int refl_k;
         double refl_ts;
         set_position(offset_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
 
         if (refl_k != -1) {
+            // ←←← ВОТ ОНО: освещённый цвет отражённой точки!
             uchar4 refl_lit = shade(refl_target, refl_normal, trigs[refl_k].color, count_lights, lights);
-            I_r = (1 - ks) * I_r + ks * (refl_lit.r / 255.0);
-            I_g = (1 - ks) * I_g + ks * (refl_lit.g / 255.0);
-            I_b = (1 - ks) * I_b + ks * (refl_lit.b / 255.0);
+            double refl_r = refl_lit.r / 255.0;
+            double refl_g = refl_lit.g / 255.0;
+            double refl_b = refl_lit.b / 255.0;
+
+            // Смешиваем
+            I_r = (1.0 - ks) * I_r + ks * refl_r;
+            I_g = (1.0 - ks) * I_g + ks * refl_g;
+            I_b = (1.0 - ks) * I_b + ks * refl_b;
+
+            // Clamp again after mixing
+            I_r = fmax(0.0, fmin(1.0, I_r));
+            I_g = fmax(0.0, fmin(1.0, I_g));
+            I_b = fmax(0.0, fmin(1.0, I_b));
         }
     }
-
-    // === Преломление ===
-    if (kt > 0.0) {
-        vec3 refr_dir;
-        const double eta = 1.5; // показатель преломления материала (например, стекло)
-
-        // dir направлен от камеры к точке → это "входящий вектор"
-        // Для refract нужно направление Внутрь поверхности → он уже правильный
-        if (refract(dir, normal, eta, &refr_dir)) {
-            double eps = 1 - 1e-5;
-            vec3 offset_pos = add(pos, mult(dir, dir, dir, (vec3){ts + eps, ts + eps, ts + eps}));
-            vec3 refr_target, refr_normal;
-            int refr_k;
-            double refr_ts;
-            set_position(offset_pos, refr_dir, refr_target, refr_normal, refr_k, refr_ts);
-
-            if (refr_k != -1) {
-                uchar4 refr_lit = shade(refr_target, refr_normal, trigs[refr_k].color, count_lights, lights);
-                I_r = (1 - kt) * I_r + kt * (refr_lit.r / 255.0);
-                I_g = (1 - kt) * I_g + kt * (refr_lit.g / 255.0);
-                I_b = (1 - kt) * I_b + kt * (refr_lit.b / 255.0);
-                // printf("Ok\n");
-            } 
-            // else {
-            //     printf("Smth went wrong\n");
-            // }
-        }
-        // Если полное внутреннее отражение — ничего не делаем (можно добавить отражение, но это уже advanced)
-    }
-
-    I_r = fmax(0.0, fmin(1.0, I_r));
-    I_g = fmax(0.0, fmin(1.0, I_g));
-    I_b = fmax(0.0, fmin(1.0, I_b));
 
     return (uchar4){
         (uchar)(I_r * 255),
