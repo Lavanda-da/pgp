@@ -283,9 +283,9 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
 
         if (refl_k != -1) {
             uchar4 refl_lit = shade(refl_target, refl_normal, trigs[refl_k].color, count_lights, lights);
-            I_r += ks * (refl_lit.r / 255.0);
-            I_g += ks * (refl_lit.g / 255.0);
-            I_b += ks * (refl_lit.b / 255.0);
+            I_r = (1 - ks) * I_r + ks * (refl_lit.r / 255.0);
+            I_g = (1 - ks) * I_g + ks * (refl_lit.g / 255.0);
+            I_b = (1 - ks) * I_b + ks * (refl_lit.b / 255.0);
         }
     }
 
@@ -297,7 +297,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         // dir направлен от камеры к точке → это "входящий вектор"
         // Для refract нужно направление Внутрь поверхности → он уже правильный
         if (refract(dir, normal, eta, &refr_dir)) {
-            double eps = 1e-5;
+            double eps = 1 - 1e-5;
             vec3 offset_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
             vec3 refr_target, refr_normal;
             int refr_k;
@@ -306,9 +306,9 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
 
             if (refr_k != -1) {
                 uchar4 refr_lit = shade(refr_target, refr_normal, trigs[refr_k].color, count_lights, lights);
-                I_r += kt * (refr_lit.r / 255.0);
-                I_g += kt * (refr_lit.g / 255.0);
-                I_b += kt * (refr_lit.b / 255.0);
+                I_r = (1 - kt) * I_r + kt * (refr_lit.r / 255.0);
+                I_g = (1 - kt) * I_g + kt * (refr_lit.g / 255.0);
+                I_b = (1 - kt) * I_b + kt * (refr_lit.b / 255.0);
                 // printf("Ok\n");
             } 
             // else {
