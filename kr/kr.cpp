@@ -215,20 +215,21 @@ vec3 reflect(vec3 I, vec3 N) {
 uchar4 shade(vec3 point, vec3 normal, uchar4 base_color, int count_lights, vec3 *lights, bool has_texture) {
     uchar4 tex_color = base_color;
     if (has_texture && texture_data) {
-        // UV: от -5 до +5 → [0, 10] → [0,1]
-        double uu = (point.x + 5.0) / 10.0;
-        double vv = (point.y + 5.0) / 10.0;
+        // Преобразуем координаты из [-5, +5] → [0, 1]
+        double uu = (point.x + 5.0) / 10.0;  // x ∈ [-5,5] → uu ∈ [0,1]
+        double vv = (point.y + 5.0) / 10.0;  // y ∈ [-5,5] → vv ∈ [0,1]
 
-        // Wrap (повторение текстуры)
-        uu = fmod(uu, 1.0);
-        vv = fmod(vv, 1.0);
-        if (uu < 0) uu += 1.0;
-        if (vv < 0) vv += 1.0;
+        // Clamp: если точка вышла за пределы пола — обрезаем до краёв текстуры
+        uu = fmax(0.0, fmin(1.0, uu));
+        vv = fmax(0.0, fmin(1.0, vv));
 
-        int x = (int)(uu * tex_width) % tex_width;
-        int y = (int)(vv * tex_height) % tex_height;
-        if (x < 0) x += tex_width;
-        if (y < 0) y += tex_height;
+        // Преобразуем в пиксельные координаты
+        int x = (int)(uu * (tex_width - 1));
+        int y = (int)(vv * (tex_height - 1));
+
+        // Защита от выхода за границы (на случай округления)
+        x = fmax(0, fmin(tex_width - 1, x));
+        y = fmax(0, fmin(tex_height - 1, y));
 
         uchar* pixel = &texture_data[(y * tex_width + x) * 3];
         tex_color = { pixel[0], pixel[1], pixel[2], 0 };
