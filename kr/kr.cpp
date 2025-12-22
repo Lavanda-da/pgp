@@ -1,10 +1,6 @@
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
 
 typedef unsigned char uchar;
 
@@ -31,7 +27,6 @@ vec3 prod(vec3 a, vec3 b) {
 
 vec3 norm(vec3 v) {
     double l = sqrt(dot(v, v));
-    if (l == 0) return {0, 0, 0};
     return {v.x / l, v.y / l, v.z / l};
 }
 
@@ -50,30 +45,24 @@ vec3 mult(vec3 a, vec3 b, vec3 c, vec3 v) {
         a.z * v.x + b.z * v.y + c.z * v.z,
     };
 }
+void print(vec3 v) {
+    printf("%e %e %e\n", v.x, v.y, v.z);
+}
 
 struct trig {
     vec3 a;
     vec3 b;
     vec3 c;
     uchar4 color;
-    double k_refl = 0.5;
-    double k_refr = 0.0;
-    bool has_texture = false;
+    double k_refl = 0.5; // отражение
+    double k_refr = 0; // преломление
 };
 
 trig trigs[38];
 
-// Глобальные переменные текстуры
-uchar* texture_data = nullptr;
-int tex_width = 0, tex_height = 0, tex_channels = 0;
-
-void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_r, double iko_r,
-                 double tetr_k_refl, double tetr_k_refr,
-                 double hex_k_refl, double hex_k_refr,
-                 double iko_k_refl, double iko_k_refr) {
-    // Пол — два треугольника
-    trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}, 0.0, 0.0, true};
-    trigs[1] = {{-5, 5, 0}, {5, -5, 0}, {5, 5, 0}, {100, 100, 100, 0}, 0.0, 0.0, true};
+void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_r, double iko_r, double tetr_k_refl, double tetr_k_refr, double hex_k_refl, double hex_k_refr, double iko_k_refl, double iko_k_refr) {
+    trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}};
+    trigs[1] = {{-5, 5, 0}, {5, -5, 0}, {5, 5, 0}, {100, 100, 100, 0}};
 
     vec3 point_0 = {tetr_r * (-1.632990) + tetr_c.x, tetr_r * (-0.942809) + tetr_c.y, tetr_r * (-0.666667) + tetr_c.z};
     vec3 point_1 = {tetr_r * 0. + tetr_c.x, tetr_r * 1.885620 + tetr_c.y, tetr_r * (-0.666667) + tetr_c.z};
@@ -107,6 +96,10 @@ void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_
     trigs[16] = {p1, p5, p6, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
     trigs[17] = {p1, p6, p2, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
 
+    point_0 = {0. * iko_r + iko_c.x, -0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z};
+    point_1 = {0.850651 * iko_r + iko_c.x, 0. * iko_r + iko_c.y, 0.525731 * iko_r + iko_c.z};
+    point_2 = {0.850651 * iko_r + iko_c.x, 0. * iko_r + iko_c.y, -0.525731 * iko_r + iko_c.z};
+    point_3 = {-0.850651 * iko_r + iko_c.x, 0. * iko_r + iko_c.y, -0.525731 * iko_r + iko_c.z};
     vec3 point_4 = {-0.850651 * iko_r + iko_c.x, 0. * iko_r + iko_c.y, 0.525731 * iko_r + iko_c.z};
     vec3 point_5 = {-0.525731 * iko_r + iko_c.x, 0.850651 * iko_r + iko_c.y, 0. * iko_r + iko_c.z};
     vec3 point_6 = {0.525731 * iko_r + iko_c.x, 0.850651 * iko_r + iko_c.y, 0. * iko_r + iko_c.z};
@@ -116,63 +109,34 @@ void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_
     vec3 point_10 = {0. * iko_r + iko_c.x, 0.525731 * iko_r + iko_c.y, -0.850651 * iko_r + iko_c.z};
     vec3 point_11 = {0. * iko_r + iko_c.x, 0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z};
 
-    trigs[18] = {{0.850651 * iko_r + iko_c.x, 0., 0.525731 * iko_r + iko_c.z},
-                 {0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 point_6, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[19] = {{0.850651 * iko_r + iko_c.x, 0., 0.525731 * iko_r + iko_c.z},
-                 point_7,
-                 {0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[20] = {{-0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 point_4, point_5, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[21] = {point_4,
-                 {-0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 point_8, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[18] = {point_1, point_2, point_6, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[19] = {point_1, point_7, point_2, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[20] = {point_3, point_4, point_5, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[21] = {point_4, point_3, point_8, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
     trigs[22] = {point_6, point_5, point_11, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
     trigs[23] = {point_5, point_6, point_10, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[24] = {point_9, point_10,
-                 {0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[25] = {point_10, point_9,
-                 {-0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[24] = {point_9, point_10, point_2, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[25] = {point_10, point_9, point_3, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
     trigs[26] = {point_7, point_8, point_9, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[27] = {point_8, point_7,
-                 {0., -0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z},
-                 {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[28] = {point_11,
-                 {0., -0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z},
-                 {0.850651 * iko_r + iko_c.x, 0., 0.525731 * iko_r + iko_c.z},
-                 {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[29] = {{0., -0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z},
-                 point_11, point_4, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[30] = {point_6,
-                 {0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 point_10, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[31] = {{0.850651 * iko_r + iko_c.x, 0., 0.525731 * iko_r + iko_c.z},
-                 point_6, point_11, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[32] = {{-0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 point_5, point_10, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[27] = {point_8, point_7, point_0, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[28] = {point_11, point_0, point_1, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[29] = {point_0, point_11, point_4, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[30] = {point_6, point_2, point_10, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[31] = {point_1, point_6, point_11, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[32] = {point_3, point_5, point_10, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
     trigs[33] = {point_5, point_4, point_11, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[34] = {{0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 point_7, point_9, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[35] = {point_7,
-                 {0.850651 * iko_r + iko_c.x, 0., 0.525731 * iko_r + iko_c.z},
-                 {0., -0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z},
-                 {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[36] = {{-0.850651 * iko_r + iko_c.x, 0., -0.525731 * iko_r + iko_c.z},
-                 point_9, point_8, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
-    trigs[37] = {point_4, point_8,
-                 {0., -0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z},
-                 {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[34] = {point_2, point_7, point_9, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[35] = {point_7, point_1, point_0, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[36] = {point_3, point_9, point_8, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[37] = {point_4, point_8, point_0, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
 }
 
 void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, double &ts_min) {
     k_min = -1;
-    ts_min = 1e300;
+    ts_min = 1e300; // большое число
 
     for (int k = 0; k < 38; ++k) {
-        vec3 e1 = diff(trigs[k].b, trigs[k].a);
+                vec3 e1 = diff(trigs[k].b, trigs[k].a);
         vec3 e2 = diff(trigs[k].c, trigs[k].a);
         vec3 p = prod(dir, e2);
         double div = dot(p, e1);
@@ -187,16 +151,17 @@ void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, d
         if (v < 0. || u + v > 1.) continue;
 
         double ts = dot(q, e2) / div;
-        if (ts < 1e-6) continue;
+        if (ts < 1e-6) continue; // ←←← минимальное расстояние (защита от self-intersection)
 
         if (k_min == -1 || ts < ts_min) {
             k_min = k;
             ts_min = ts;
             pix_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
             normal = norm(prod(e1, e2));
+            // Исправляем ориентацию нормали
             if (dot(dir, normal) > 0) {
-                normal.x = -normal.x;
-                normal.y = -normal.y;
+                normal.x = -normal.x; 
+                normal.y = -normal.y; 
                 normal.z = -normal.z;
             }
         }
@@ -212,32 +177,11 @@ vec3 reflect(vec3 I, vec3 N) {
     };
 }
 
-uchar4 shade(vec3 point, vec3 normal, uchar4 base_color, int count_lights, vec3 *lights, bool has_texture) {
-    uchar4 tex_color = base_color;
-    if (has_texture && texture_data) {
-        // Преобразуем координаты из [-5, +5] → [0, 1]
-        double uu = (point.x + 5.0) / 10.0;  // x ∈ [-5,5] → uu ∈ [0,1]
-        double vv = (point.y + 5.0) / 10.0;  // y ∈ [-5,5] → vv ∈ [0,1]
-
-        // Clamp: если точка вышла за пределы пола — обрезаем до краёв текстуры
-        uu = fmax(0.0, fmin(1.0, uu));
-        vv = fmax(0.0, fmin(1.0, vv));
-
-        // Преобразуем в пиксельные координаты
-        int x = (int)(uu * (tex_width - 1));
-        int y = (int)(vv * (tex_height - 1));
-
-        // Защита от выхода за границы (на случай округления)
-        x = fmax(0, fmin(tex_width - 1, x));
-        y = fmax(0, fmin(tex_height - 1, y));
-
-        uchar* pixel = &texture_data[(y * tex_width + x) * 3];
-        tex_color = { pixel[0], pixel[1], pixel[2], 0 };
-    }
-
-    double kd_r = tex_color.r / 255.0;
-    double kd_g = tex_color.g / 255.0;
-    double kd_b = tex_color.b / 255.0;
+// Вычисляет освещённый цвет точки (без отражения/преломления!)
+uchar4 shade(vec3 point, vec3 normal, uchar4 base_color, int count_lights, vec3 *lights) {
+    double kd_r = base_color.r / 255.0;
+    double kd_g = base_color.g / 255.0;
+    double kd_b = base_color.b / 255.0;
 
     // Ambient
     double I_r = kd_r * 0.1;
@@ -254,6 +198,7 @@ uchar4 shade(vec3 point, vec3 normal, uchar4 base_color, int count_lights, vec3 
         I_b += kd_b * NdotL;
     }
 
+    // Clamp
     I_r = fmax(0.0, fmin(1.0, I_r));
     I_g = fmax(0.0, fmin(1.0, I_g));
     I_b = fmax(0.0, fmin(1.0, I_b));
@@ -276,16 +221,20 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         return (uchar4){0, 0, 0, 0};
     }
 
-    uchar4 base_lit = shade(pix_pos, normal, trigs[k_min].color, count_lights, lights, trigs[k_min].has_texture);
+    // Основной цвет с освещением
+    uchar4 base_lit = shade(pix_pos, normal, trigs[k_min].color, count_lights, lights);
     double I_r = base_lit.r / 255.0;
     double I_g = base_lit.g / 255.0;
     double I_b = base_lit.b / 255.0;
 
+    // === Отражение (один уровень) ===
     double ks = trigs[k_min].k_refl;
     if (ks > 0.0) {
         vec3 refl_dir = reflect(dir, normal);
+
+        // Сдвигаем точку, чтобы избежать self-intersection
         double eps = 1e-5;
-        vec3 offset_pos = add(pix_pos, mult(normal, normal, normal, (vec3){eps, eps, eps}));
+        vec3 offset_pos = add(pos, mult(dir, dir, dir, (vec3){ts * eps, ts * eps, ts * eps}));
 
         vec3 refl_target, refl_normal;
         int refl_k;
@@ -293,15 +242,18 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         set_position(offset_pos, refl_dir, refl_target, refl_normal, refl_k, refl_ts);
 
         if (refl_k != -1) {
-            uchar4 refl_lit = shade(refl_target, refl_normal, trigs[refl_k].color, count_lights, lights, trigs[refl_k].has_texture);
+            // ←←← ВОТ ОНО: освещённый цвет отражённой точки!
+            uchar4 refl_lit = shade(refl_target, refl_normal, trigs[refl_k].color, count_lights, lights);
             double refl_r = refl_lit.r / 255.0;
             double refl_g = refl_lit.g / 255.0;
             double refl_b = refl_lit.b / 255.0;
 
+            // Смешиваем
             I_r = (1.0 - ks) * I_r + ks * refl_r;
             I_g = (1.0 - ks) * I_g + ks * refl_g;
             I_b = (1.0 - ks) * I_b + ks * refl_b;
 
+            // Clamp again after mixing
             I_r = fmax(0.0, fmin(1.0, I_r));
             I_g = fmax(0.0, fmin(1.0, I_g));
             I_b = fmax(0.0, fmin(1.0, I_b));
@@ -329,18 +281,14 @@ void render(vec3 pc, vec3 pv, int w, int h, double angle, uchar4 *data, int coun
             vec3 v = {-1. + dw * i, (-1. + dh * j) * h / w, z};
             vec3 dir = norm(mult(bx, by, bz, v));
             data[(h - 1 - j) * w + i] = ray(pc, dir, count_lights, lights);
+            // printf("%d %d %d %d\n", data[(h - 1 - j) * w + i].r, data[(h - 1 - j) * w + i].g, data[(h - 1 - j) * w + i].b, data[(h - 1 - j) * w + i].a);
         }
     }
 }
 
-int main() {
-    // Загрузка текстуры
-    texture_data = stbi_load("floor.jpg", &tex_width, &tex_height, &tex_channels, 3);
-    if (!texture_data) {
-        fprintf(stderr, "ERROR: Cannot load floor.jpg\n");
-        return 1;
-    }
+vec3 lights[1];
 
+int main() {
     int frames;
     scanf("%d", &frames);
 
@@ -374,10 +322,7 @@ int main() {
     
     vec3 pc, pv;
 
-    build_space(tetr_c, hex_c, iko_c, tetr_r, hex_r, iko_r,
-                tetr_k_refl, tetr_k_refr,
-                hex_k_refl, hex_k_refr,
-                iko_k_refl, iko_k_refr);
+    build_space(tetr_c, hex_c, iko_c, tetr_r, hex_r, iko_r, tetr_k_refl, tetr_k_refr, hex_k_refl, hex_k_refr, iko_k_refl, iko_k_refr);
 
     for (int k = 0; k < frames; ++k) {
         double r_c = r_0_c + a_r_c * sin(w_r_c * k + p_r_c);
@@ -393,16 +338,17 @@ int main() {
         printf("%d: %s\n", k, buff2);
 
         FILE *out = fopen(buff2, "wb");
-        if (out) {
-            fwrite(&w, sizeof(int), 1, out);
-            fwrite(&h, sizeof(int), 1, out);
-            fwrite(data, sizeof(uchar4), w * h, out);
-            fclose(out);
-        }
+        fwrite(&w, sizeof(int), 1, out);
+        fwrite(&h, sizeof(int), 1, out);
+        fwrite(data, sizeof(uchar4), w * h, out);
+        fclose(out);
     }
-
+    // for (int i = 0; i < w; ++i) {
+    //     for (int j = 0; j < h; ++j) {
+    //         printf("%d%d%d%d ", data[(h - 1 - j) * w + i].r, data[(h - 1 - j) * w + i].g, data[(h - 1 - j) * w + i].b, data[(h - 1 - j) * w + i].a);
+    //     }
+    //     printf("\n");
+    // }
     free(data);
-    free(lights);
-    stbi_image_free(texture_data);
     return 0;
 }
