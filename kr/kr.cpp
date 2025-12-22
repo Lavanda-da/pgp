@@ -298,7 +298,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
         // Для refract нужно направление Внутрь поверхности → он уже правильный
         if (refract(dir, normal, eta, &refr_dir)) {
             double eps = 1 - 1e-5;
-            vec3 offset_pos = add(pos, mult(dir, dir, dir, (vec3){ts, ts, ts}));
+            vec3 offset_pos = add(pos, mult(dir, dir, dir, (vec3){ts + eps, ts + eps, ts + eps}));
             vec3 refr_target, refr_normal;
             int refr_k;
             double refr_ts;
