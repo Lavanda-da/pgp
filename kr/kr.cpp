@@ -291,14 +291,23 @@ int main() {
     scanf("%d", &frames);
 
     char buff[256];
+    char buff2[256];
     scanf("%s", buff);
+
+    int w, h, angle;
+    scanf("%d %d %d", &w, &h, &angle);
+
     vec3 tetr_c, hex_c, iko_c;
     double tetr_r, hex_r, iko_r;
     scanf("%lf %lf %lf %lf", &tetr_c.x, &tetr_c.y, &tetr_c.z, &tetr_r);
     scanf("%lf %lf %lf %lf", &hex_c.x, &hex_c.y, &hex_c.z, &hex_r);
     scanf("%lf %lf %lf %lf", &iko_c.x, &iko_c.y, &iko_c.z, &iko_r);
 
-    int w = 640, h = 480;
+    double r_0_c, z_0_c, phi_0_c, a_r_c, a_z_c, w_r_c, w_z_c, w_phi_c, p_r_c, p_z_c;
+    double r_0_n, z_0_n, phi_0_n, a_r_n, a_z_n, w_r_n, w_z_n, w_phi_n, p_r_n, p_z_n;
+    scanf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", &r_0_c, &z_0_c, &phi_0_c, &a_r_c, &a_z_c, &w_r_c, &w_z_c, &w_phi_c, &p_r_c, &p_z_c);
+    scanf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", &r_0_n, &z_0_n, &phi_0_n, &a_r_n, &a_z_n, &w_r_n, &w_z_n, &w_phi_n, &p_r_n, &p_z_n);
+
     int count_lights = 1;
     uchar4 *data = (uchar4*)malloc(sizeof(uchar4) * w * h);
     vec3 *lights = (vec3*)malloc(sizeof(vec3) * count_lights);
@@ -311,12 +320,17 @@ int main() {
     build_space(tetr_c, hex_c, iko_c, tetr_r, hex_r, iko_r);
 
     for (int k = 0; k < frames; ++k) {
-        pc = (vec3) {3. * sin(0.05 * k), 1.5 * cos(0.05 * k), 3. + sin(0.1 * k)};
-        pv = (vec3) {0.5 + sin(0.05 * k + M_PI), 0.5 + cos(0.5 * k + M_PI), 1.};
-        render(pc, pv, w, h, 120, data, count_lights, lights);
+        double r_c = r_0_c + a_r_c * sin(w_r_c * k + p_r_c);
+        double phi_c = phi_0_c + w_phi_c * k;
+        pc = (vec3) {r_c * cos(phi_c), r_c * sin(phi_c), z_0_c + a_z_c * sin(w_z_c * k + p_z_c)};
+        
+        double r_n = r_0_n + a_r_n * sin(w_r_n * k + p_r_n);
+        double phi_n = phi_0_n + w_phi_n * k;
+        pv = (vec3) {r_n * cos(phi_n), r_n * sin(phi_n), z_0_n + a_z_n * sin(w_z_n * k + p_z_n)};
+        render(pc, pv, w, h, angle, data, count_lights, lights);
 
-        // sprintf(buff, "res/%d.data", k);
-        printf("%d: %s\n", k, buff);
+        sprintf(buff2, buff, k);
+        printf("%d: %s\n", k, buff2);
 
         FILE *out = fopen(buff, "wb");
         fwrite(&w, sizeof(int), 1, out);
