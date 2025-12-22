@@ -54,11 +54,13 @@ struct trig {
     vec3 b;
     vec3 c;
     uchar4 color;
+    double k_refl = 0.5; // отражение
+    double k_refr = 0; // преломление
 };
 
 trig trigs[38];
 
-void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_r, double iko_r) {
+void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_r, double iko_r, double tetr_k_refl, double tetr_k_refr, double hex_k_refl, double hex_k_refr, double iko_k_refl, double iko_k_refr) {
     trigs[0] = {{-5, -5, 0}, {5, -5, 0}, {-5, 5, 0}, {100, 100, 100, 0}};
     trigs[1] = {{-5, 5, 0}, {5, -5, 0}, {5, 5, 0}, {100, 100, 100, 0}};
 
@@ -67,10 +69,10 @@ void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_
     vec3 point_2 = {tetr_r * 1.632990 + tetr_c.x, tetr_r * (-0.942809) + tetr_c.y, tetr_r * (-0.666667) + tetr_c.z};
     vec3 point_3 = {tetr_r * 0. + tetr_c.x, tetr_r * 0. + tetr_c.y, tetr_r * 2. + tetr_c.z};
 
-    trigs[2] = {point_0, point_1, point_2, {255, 0, 0, 0}};
-    trigs[3] = {point_0, point_3, point_1, {255, 0, 0, 0}};
-    trigs[4] = {point_1, point_3, point_2, {255, 0, 0, 0}};
-    trigs[5] = {point_2, point_3, point_0, {255, 0, 0, 0}};
+    trigs[2] = {point_0, point_1, point_2, {255, 0, 0, 0}, tetr_k_refl, tetr_k_refr};
+    trigs[3] = {point_0, point_3, point_1, {255, 0, 0, 0}, tetr_k_refl, tetr_k_refr};
+    trigs[4] = {point_1, point_3, point_2, {255, 0, 0, 0}, tetr_k_refl, tetr_k_refr};
+    trigs[5] = {point_2, point_3, point_0, {255, 0, 0, 0}, tetr_k_refl, tetr_k_refr};
 
     vec3 p0 = {hex_c.x - 0.5 * hex_r, hex_c.y - 0.5 * hex_r, hex_c.z - 0.5 * hex_r};
     vec3 p1 = {hex_c.x - 0.5 * hex_r, hex_c.y + 0.5 * hex_r, hex_c.z - 0.5 * hex_r};
@@ -81,18 +83,18 @@ void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_
     vec3 p6 = {hex_c.x + 0.5 * hex_r, hex_c.y + 0.5 * hex_r, hex_c.z + 0.5 * hex_r};
     vec3 p7 = {hex_c.x + 0.5 * hex_r, hex_c.y - 0.5 * hex_r, hex_c.z + 0.5 * hex_r};
 
-    trigs[6]  = {p0, p1, p2, {0, 255, 0, 0}};
-    trigs[7]  = {p0, p2, p3, {0, 255, 0, 0}};
-    trigs[8]  = {p4, p7, p6, {0, 255, 0, 0}};
-    trigs[9]  = {p4, p6, p5, {0, 255, 0, 0}};
-    trigs[10] = {p4, p5, p1, {0, 255, 0, 0}};
-    trigs[11] = {p4, p1, p0, {0, 255, 0, 0}};
-    trigs[12] = {p3, p2, p6, {0, 255, 0, 0}};
-    trigs[13] = {p3, p6, p7, {0, 255, 0, 0}};
-    trigs[14] = {p0, p3, p7, {0, 255, 0, 0}};
-    trigs[15] = {p0, p7, p4, {0, 255, 0, 0}};
-    trigs[16] = {p1, p5, p6, {0, 255, 0, 0}};
-    trigs[17] = {p1, p6, p2, {0, 255, 0, 0}};
+    trigs[6]  = {p0, p1, p2, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[7]  = {p0, p2, p3, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[8]  = {p4, p7, p6, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[9]  = {p4, p6, p5, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[10] = {p4, p5, p1, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[11] = {p4, p1, p0, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[12] = {p3, p2, p6, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[13] = {p3, p6, p7, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[14] = {p0, p3, p7, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[15] = {p0, p7, p4, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[16] = {p1, p5, p6, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
+    trigs[17] = {p1, p6, p2, {0, 255, 0, 0}, hex_k_refl, hex_k_refr};
 
     point_0 = {0. * iko_r + iko_c.x, -0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z};
     point_1 = {0.850651 * iko_r + iko_c.x, 0. * iko_r + iko_c.y, 0.525731 * iko_r + iko_c.z};
@@ -107,26 +109,26 @@ void build_space(vec3 tetr_c, vec3 hex_c, vec3 iko_c, double tetr_r, double hex_
     vec3 point_10 = {0. * iko_r + iko_c.x, 0.525731 * iko_r + iko_c.y, -0.850651 * iko_r + iko_c.z};
     vec3 point_11 = {0. * iko_r + iko_c.x, 0.525731 * iko_r + iko_c.y, 0.850651 * iko_r + iko_c.z};
 
-    trigs[18] = {point_1, point_2, point_6, {0, 0, 255, 0}};
-    trigs[19] = {point_1, point_7, point_2, {0, 0, 255, 0}};
-    trigs[20] = {point_3, point_4, point_5, {0, 0, 255, 0}};
-    trigs[21] = {point_4, point_3, point_8, {0, 0, 255, 0}};
-    trigs[22] = {point_6, point_5, point_11, {0, 0, 255, 0}};
-    trigs[23] = {point_5, point_6, point_10, {0, 0, 255, 0}};
-    trigs[24] = {point_9, point_10, point_2, {0, 0, 255, 0}};
-    trigs[25] = {point_10, point_9, point_3, {0, 0, 255, 0}};
-    trigs[26] = {point_7, point_8, point_9, {0, 0, 255, 0}};
-    trigs[27] = {point_8, point_7, point_0, {0, 0, 255, 0}};
-    trigs[28] = {point_11, point_0, point_1, {0, 0, 255, 0}};
-    trigs[29] = {point_0, point_11, point_4, {0, 0, 255, 0}};
-    trigs[30] = {point_6, point_2, point_10, {0, 0, 255, 0}};
-    trigs[31] = {point_1, point_6, point_11, {0, 0, 255, 0}};
-    trigs[32] = {point_3, point_5, point_10, {0, 0, 255, 0}};
-    trigs[33] = {point_5, point_4, point_11, {0, 0, 255, 0}};
-    trigs[34] = {point_2, point_7, point_9, {0, 0, 255, 0}};
-    trigs[35] = {point_7, point_1, point_0, {0, 0, 255, 0}};
-    trigs[36] = {point_3, point_9, point_8, {0, 0, 255, 0}};
-    trigs[37] = {point_4, point_8, point_0, {0, 0, 255, 0}};
+    trigs[18] = {point_1, point_2, point_6, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[19] = {point_1, point_7, point_2, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[20] = {point_3, point_4, point_5, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[21] = {point_4, point_3, point_8, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[22] = {point_6, point_5, point_11, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[23] = {point_5, point_6, point_10, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[24] = {point_9, point_10, point_2, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[25] = {point_10, point_9, point_3, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[26] = {point_7, point_8, point_9, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[27] = {point_8, point_7, point_0, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[28] = {point_11, point_0, point_1, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[29] = {point_0, point_11, point_4, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[30] = {point_6, point_2, point_10, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[31] = {point_1, point_6, point_11, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[32] = {point_3, point_5, point_10, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[33] = {point_5, point_4, point_11, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[34] = {point_2, point_7, point_9, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[35] = {point_7, point_1, point_0, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[36] = {point_3, point_9, point_8, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
+    trigs[37] = {point_4, point_8, point_0, {0, 0, 255, 0}, iko_k_refl, iko_k_refr};
 }
 
 void set_position(vec3 pos, vec3 dir, vec3 &pix_pos, vec3 &normal, int &k_min, double &ts_min) {
@@ -226,7 +228,7 @@ uchar4 ray(vec3 pos, vec3 dir, int count_lights, vec3 *lights) {
     double I_b = base_lit.b / 255.0;
 
     // === Отражение (один уровень) ===
-    double ks = 0.5;  // или trigs[k_min].ks, если добавишь
+    double ks = trigs[k_min].k_refl;
     if (ks > 0.0) {
         vec3 refl_dir = reflect(dir, normal);
 
@@ -296,30 +298,31 @@ int main() {
 
     int w, h, angle;
     scanf("%d %d %d", &w, &h, &angle);
+    uchar4 *data = (uchar4*)malloc(sizeof(uchar4) * w * h);
 
     double r_0_c, z_0_c, phi_0_c, a_r_c, a_z_c, w_r_c, w_z_c, w_phi_c, p_r_c, p_z_c;
     double r_0_n, z_0_n, phi_0_n, a_r_n, a_z_n, w_r_n, w_z_n, w_phi_n, p_r_n, p_z_n;
     scanf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", &r_0_c, &z_0_c, &phi_0_c, &a_r_c, &a_z_c, &w_r_c, &w_z_c, &w_phi_c, &p_r_c, &p_z_c);
     scanf("%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", &r_0_n, &z_0_n, &phi_0_n, &a_r_n, &a_z_n, &w_r_n, &w_z_n, &w_phi_n, &p_r_n, &p_z_n);
-    // printf("%f %f %f %f %f %f %f %f %f %f", r_0_c, z_0_c, phi_0_c, a_r_c, a_z_c, w_r_c, w_z_c, w_phi_c, p_r_c, p_z_c);
-
 
     vec3 tetr_c, hex_c, iko_c;
     double tetr_r, hex_r, iko_r;
-    scanf("%lf %lf %lf %lf", &tetr_c.x, &tetr_c.y, &tetr_c.z, &tetr_r);
-    scanf("%lf %lf %lf %lf", &hex_c.x, &hex_c.y, &hex_c.z, &hex_r);
-    scanf("%lf %lf %lf %lf", &iko_c.x, &iko_c.y, &iko_c.z, &iko_r);
+    double tetr_k_refl, tetr_k_refr, hex_k_refl, hex_k_refr, iko_k_refl, iko_k_refr;
+    scanf("%lf %lf %lf %lf %lf %lf", &tetr_c.x, &tetr_c.y, &tetr_c.z, &tetr_r, &tetr_k_refl, &tetr_k_refr);
+    scanf("%lf %lf %lf %lf %lf %lf", &hex_c.x, &hex_c.y, &hex_c.z, &hex_r, &hex_k_refl, &hex_k_refr);
+    scanf("%lf %lf %lf %lf %lf %lf", &iko_c.x, &iko_c.y, &iko_c.z, &iko_r, &iko_k_refl, &iko_k_refr);
 
-    int count_lights = 1;
-    uchar4 *data = (uchar4*)malloc(sizeof(uchar4) * w * h);
+    int count_lights;
+    scanf("%d", &count_lights);
+    
     vec3 *lights = (vec3*)malloc(sizeof(vec3) * count_lights);
     for (int i = 0; i < count_lights; ++i) {
-        lights[i] = {0, 0, 5};
+        scanf("%lf %lf %lf", &lights[i].x, &lights[i].y, &lights[i].z);
     }
     
     vec3 pc, pv;
 
-    build_space(tetr_c, hex_c, iko_c, tetr_r, hex_r, iko_r);
+    build_space(tetr_c, hex_c, iko_c, tetr_r, hex_r, iko_r, tetr_k_refl, tetr_k_refr, hex_k_refl, hex_k_refr, iko_k_refl, iko_k_refr);
 
     for (int k = 0; k < frames; ++k) {
         double r_c = r_0_c + a_r_c * sin(w_r_c * k + p_r_c);
